@@ -1,0 +1,25 @@
+{
+    "name": "forikal-uk/ping-drive",
+    "description": "Symfony Console command that reports its attempts at locating and reading the contents of a Google Drive folder or file",
+    "type": "library",
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "Surgie Finesse",
+            "email": "finesserus@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.5.9",
+        "symfony/console": "^3.4",
+        "symfony/yaml": "^3.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "ForikalUK\\PingDrive\\": "src/"
+        }
+    },
+    "bin": [
+        "ping-drive"
+    ]
+}

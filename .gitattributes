@@ -1,0 +1,5 @@
+* text=auto
+
+# Casts line break symbols in text files to the LF symbol
+*.{php,json,lock,md} text eol=lf
+*.{gitignore,gitattributes} text eol=lf

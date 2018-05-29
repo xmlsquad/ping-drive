@@ -1,0 +1,3 @@
+google:
+    clientSecretFile: google-client-secret.json # The path to an application client secret file
+    accessTokenFile: google-access-token.json   # The path to an access token file (optional, the file may not exist)
