@@ -6,6 +6,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Yaml;
 
 /**
@@ -19,6 +20,21 @@ class PingDriveCommand extends Command
      * The name of fallback configuration file for a case when the API files paths are not specified in the input
      */
     const CONFIG_FILE_NAME = 'scapesettings.yaml';
+
+    /**
+     * @var Filesystem Symfony filesystem helper
+     */
+    protected $filesystem;
+
+    /**
+     * @inheritDoc
+     */
+    public function __construct()
+    {
+        parent::__construct();
+
+        $this->filesystem = new Filesystem();
+    }
 
     /**
      * @inheritDoc
@@ -47,7 +63,7 @@ class PingDriveCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $inputData = $this->parseInput($input, $output);
+        $inputData = $this->parseInitialInput($input, $output);
         if ($inputData === null) {
             return 1;
         }
@@ -67,9 +83,9 @@ class PingDriveCommand extends Command
      *    the following keys:
      *     - url (string)
      *     - clientSecretFile (string)
-     *     -  accessTokenFile (string|null)
+     *     - accessTokenFile (string|null)
      */
-    protected function parseInput(InputInterface $input, OutputInterface $output)
+    protected function parseInitialInput(InputInterface $input, OutputInterface $output)
     {
         $options = [
             'url' => trim($input->getOption('url'))
@@ -120,14 +136,16 @@ class PingDriveCommand extends Command
      * @return string[] Options values. The keys are:
      *  - clientSecretFile (string)
      *  - accessTokenFile (string|null)
+     * @throws \RuntimeException If a configuration file can't be found, read or parsed
      */
     protected function getDataFromConfigFile(OutputInterface $output)
     {
-        $filePath = $this->findConfigFile();
-        $output->writeln('Reading options from `'.$filePath.'`');
+        $configFilePath = $this->findConfigFile();
+        $configFileDir = dirname($configFilePath);
+        $output->writeln('Reading options from `'.$configFilePath.'`');
 
         try {
-            $configData = Yaml\Yaml::parseFile($filePath);
+            $configData = Yaml\Yaml::parseFile($configFilePath);
         } catch (Yaml\Exception\ParseException $exception) {
             throw new \RuntimeException('Couldn\'t parse The configuration file YAML');
         }
@@ -137,12 +155,16 @@ class PingDriveCommand extends Command
         if (!isset($configData['google']['clientSecretFile'])) {
             throw new \RuntimeException('The google.clientSecretFile option is not presented in the configuration file');
         }
-        if (!is_string($options['clientSecretFile'] = $configData['google']['clientSecretFile'])) {
+        if (is_string($file = $configData['google']['clientSecretFile'])) {
+            $options['clientSecretFile'] = $this->getFullPath($configFileDir, $file);
+        } else {
             throw new \RuntimeException('The google.clientSecretFile option value from the configuration file is not a string');
         }
 
         if (isset($configData['google']['accessTokenFile'])) {
-            if (!is_string($options['accessTokenFile'] = $configData['google']['accessTokenFile'])) {
+            if (is_string($file = $configData['google']['accessTokenFile'])) {
+                $options['accessTokenFile'] = $this->getFullPath($configFileDir, $file);
+            } else {
                 throw new \RuntimeException('The google.accessTokenFile option value from the configuration file is not a string');
             }
         } else {
@@ -167,7 +189,7 @@ class PingDriveCommand extends Command
         }
 
         for ($i = 0; $i < 10000; ++$i) { // for protects from an infinite loop
-            $file = $directory.'/'.static::CONFIG_FILE_NAME;
+            $file = $directory.DIRECTORY_SEPARATOR.static::CONFIG_FILE_NAME;
 
             if (is_file($file)) {
                 if (!is_readable($file)) {
@@ -177,12 +199,28 @@ class PingDriveCommand extends Command
                 return $file;
             }
 
-            $parentDirectory = realpath($directory.'/..'); // Gets the parent directory path
+            $parentDirectory = realpath($directory.DIRECTORY_SEPARATOR.'..'); // Gets the parent directory path
             if ($parentDirectory === $directory) break; // Check whether the current directory is a root directory
             $directory = $parentDirectory;
         }
 
         throw new \RuntimeException('The `'.static::CONFIG_FILE_NAME.'` exists neither in the current directory nor in'
             . ' any parent directory');
+    }
+
+    /**
+     * Converts a relative file path to a full path
+     *
+     * @param string $contextPath A directory path from where the relative path is given
+     * @param string $targetPath The relative path
+     * @return string The full path
+     */
+    protected function getFullPath($contextPath, $targetPath)
+    {
+        if ($this->filesystem->isAbsolutePath($targetPath)) {
+            return $targetPath;
+        }
+
+        return rtrim($contextPath, '/\\').DIRECTORY_SEPARATOR.$targetPath;
     }
 }
