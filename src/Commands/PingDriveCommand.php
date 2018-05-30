@@ -2,10 +2,17 @@
 
 namespace ForikalUK\PingDrive\Commands;
 
+use ForikalUK\PingDrive\GoogleAPI\GoogleAPIClient;
+use ForikalUK\PingDrive\GoogleAPI\GoogleAPIFactory;
+use Psr\Log\LogLevel;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Logger\ConsoleLogger;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Yaml;
 
@@ -22,17 +29,25 @@ class PingDriveCommand extends Command
     const CONFIG_FILE_NAME = 'scapesettings.yaml';
 
     /**
+     * @var GoogleAPIClient Google API factory
+     */
+    protected $googleAPIFactory;
+
+    /**
      * @var Filesystem Symfony filesystem helper
      */
     protected $filesystem;
 
     /**
      * @inheritDoc
+     *
+     * @param \ForikalUK\PingDrive\GoogleAPI\GoogleAPIClient|null $googleAPIFactory Google API factory
      */
-    public function __construct()
+    public function __construct(GoogleAPIFactory $googleAPIFactory = null)
     {
         parent::__construct();
 
+        $this->googleAPIFactory = $googleAPIFactory !== null ? $googleAPIFactory : new GoogleAPIFactory();
         $this->filesystem = new Filesystem();
     }
 
@@ -55,7 +70,10 @@ class PingDriveCommand extends Command
 
             ->addOption('access-token-file', null, InputOption::VALUE_REQUIRED, 'The path to an access token file. The'
                 . ' file may not exists. If an access token file is used, the command remembers user credentials and'
-                . ' doesn\'t require a Google authentication next time.');
+                . ' doesn\'t require a Google authentication next time.')
+
+            ->addOption('force-authenticate', null, InputOption::VALUE_NONE, 'If set, you will be asked to authenticate'
+                . ' even if an access token exist.');
     }
 
     /**
@@ -63,13 +81,17 @@ class PingDriveCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $inputData = $this->parseInitialInput($input, $output);
-        if ($inputData === null) {
+        $output->getFormatter()->setStyle('plain', new OutputFormatterStyle());
+
+        $options = $this->parseInitialInput($input, $output);
+        if ($options === null) {
             return 1;
         }
 
-        var_dump($inputData);
-        $output->writeln('To be continued...');
+        $googleAPIClient = $this->getAuthenticatedGoogleAPIClient($input, $output, $options);
+        if ($googleAPIClient === null) {
+            return 1;
+        }
 
         return 0;
     }
@@ -82,17 +104,19 @@ class PingDriveCommand extends Command
      * @return array[]|null If the input is incorrect, null is returned. Otherwise an options array is returned. It has
      *    the following keys:
      *     - url (string)
+     *     - forceAuthenticate (bool)
      *     - clientSecretFile (string)
      *     - accessTokenFile (string|null)
      */
     protected function parseInitialInput(InputInterface $input, OutputInterface $output)
     {
         $options = [
-            'url' => trim($input->getOption('url'))
+            'url' => trim($input->getOption('url')),
+            'forceAuthenticate' => (bool)$input->getOption('force-authenticate')
         ];
 
         if ($options['url'] === '') {
-            $output->writeln('<error>The required URL option is not given</error>');
+            $this->writeError($output, 'The required URL option is not given');
             return null;
         }
 
@@ -101,13 +125,17 @@ class PingDriveCommand extends Command
         $options['clientSecretFile'] = $input->getOption('client-secret-file');
         if ($options['clientSecretFile'] === null) {
             $needToParseConfigFile = true;
-            $output->writeln('The client secret file path is not specified, will try to get it from a configuration file');
+            if ($output->isVerbose()) {
+                $output->writeln('The client secret file path is not specified, will try to get it from a configuration file');
+            }
         }
 
         $options['accessTokenFile'] = $input->getOption('access-token-file');
         if ($options['accessTokenFile'] === null) {
             $needToParseConfigFile = true;
-            $output->writeln('The access token file path is not specified, will try to get it from a configuration file');
+            if ($output->isVerbose()) {
+                $output->writeln('The access token file path is not specified, will try to get it from a configuration file');
+            }
         }
 
         // If the API file paths are not specified, find and read a configuration file
@@ -115,18 +143,75 @@ class PingDriveCommand extends Command
             try {
                 $dataFromConfigFile = $this->getDataFromConfigFile($output);
             } catch (\RuntimeException $exception) {
-                $output->writeln('<error>Couldn\'t read a configuration file: '.$exception->getMessage().'</error>');
+                $this->writeError($output, 'Couldn\'t read a configuration file: '.$exception->getMessage());
                 return null;
             }
 
-            foreach ($dataFromConfigFile as $key => $value) {
-                if ($options[$key] === null) {
-                    $options[$key] = $value;
+            if ($options['clientSecretFile'] === null) {
+                if (($file = $dataFromConfigFile['clientSecretFile']) !== null) {
+                    $options['clientSecretFile'] = $file;
+                } else {
+                    $this->writeError($output, 'The client secret file is specified neither in the CLI arguments nor in'
+                        . ' the configuration file');
+                    return null;
                 }
+            }
+
+            if ($options['accessTokenFile'] === null && ($file = $dataFromConfigFile['accessTokenFile']) !== null) {
+                $options['accessTokenFile'] = $file;
             }
         }
 
         return $options;
+    }
+
+    /**
+     * Makes and authenticates an Google API client by interacting with the user
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @param array $options Input options received from the parseInitialInput method
+     * @return GoogleAPIClient|null If null, en error has happened (the message is printed)
+     */
+    protected function getAuthenticatedGoogleAPIClient(InputInterface $input, OutputInterface $output, array $options)
+    {
+        $googleAPIClient = $this->googleAPIFactory->make($this->makeConsoleLogger($output));
+
+        try {
+            $googleAPIClient->authenticate(
+                $options['clientSecretFile'],
+                $options['accessTokenFile'],
+                [
+                    \Google_Service_Drive::DRIVE_READONLY,
+                    \Google_Service_Sheets::SPREADSHEETS_READONLY,
+                    \Google_Service_Slides::PRESENTATIONS_READONLY
+                ],
+                function ($authURL) use ($input, $output) {
+                    $output->writeln('<info>You need to authenticate to your Google account to proceed</info>');
+                    $output->writeln('Open the following URL in a browser, get an auth code and paste it below:');
+                    $output->writeln($authURL, OutputInterface::OUTPUT_PLAIN);
+
+                    $helper = $this->getHelper('question');
+                    $question = new Question('Auth code: ');
+                    $question->setValidator(function ($answer) {
+                        $answer = trim($answer);
+
+                        if ($answer === '') {
+                            throw new \RuntimeException('Please enter an auth code');
+                        }
+
+                        return $answer;
+                    });
+                    return $helper->ask($input, $output, $question);
+                },
+                $options['forceAuthenticate']
+            );
+        } catch (\Exception $exception) {
+            $this->writeError($output, 'Failed to authenticate to Google: '.$exception->getMessage());
+            return null;
+        }
+
+        return $googleAPIClient;
     }
 
     /**
@@ -142,7 +227,9 @@ class PingDriveCommand extends Command
     {
         $configFilePath = $this->findConfigFile();
         $configFileDir = dirname($configFilePath);
-        $output->writeln('Reading options from `'.$configFilePath.'`');
+        if ($output->isVerbose()) {
+            $output->writeln('Reading options from `' . $configFilePath . '`');
+        }
 
         try {
             $configData = Yaml\Yaml::parseFile($configFilePath);
@@ -152,23 +239,19 @@ class PingDriveCommand extends Command
 
         $options = [];
 
-        if (!isset($configData['google']['clientSecretFile'])) {
-            throw new \RuntimeException('The google.clientSecretFile option is not presented in the configuration file');
-        }
-        if (is_string($file = $configData['google']['clientSecretFile'])) {
-            $options['clientSecretFile'] = $this->getFullPath($configFileDir, $file);
-        } else {
-            throw new \RuntimeException('The google.clientSecretFile option value from the configuration file is not a string');
-        }
-
-        if (isset($configData['google']['accessTokenFile'])) {
-            if (is_string($file = $configData['google']['accessTokenFile'])) {
-                $options['accessTokenFile'] = $this->getFullPath($configFileDir, $file);
-            } else {
-                throw new \RuntimeException('The google.accessTokenFile option value from the configuration file is not a string');
+        // Parsing paths
+        foreach (array('clientSecretFile', 'accessTokenFile') as $option) {
+            if (!isset($configData['google'][$option])) {
+                $options[$option] = null;
+                continue;
             }
-        } else {
-            $options['accessTokenFile'] = null;
+            if (!is_string($path = $configData['google'][$option])) {
+                $this->writeError($output, 'The google.'.$option.' option value from the configuration file is not a string');
+                $options[$option] = null;
+                continue;
+            }
+
+            $options[$option] = $this->getFullPath($configFileDir, $path);
         }
 
         return $options;
@@ -222,5 +305,32 @@ class PingDriveCommand extends Command
         }
 
         return rtrim($contextPath, '/\\').DIRECTORY_SEPARATOR.$targetPath;
+    }
+
+    /**
+     * Creates a PSR logger instance which prints messages to the command output
+     *
+     * @param OutputInterface $output
+     * @return ConsoleLogger
+     */
+    protected function makeConsoleLogger(OutputInterface $output)
+    {
+        return new ConsoleLogger($output, [
+            LogLevel::DEBUG  => OutputInterface::VERBOSITY_VERY_VERBOSE,
+            LogLevel::INFO   => OutputInterface::VERBOSITY_VERBOSE,
+            LogLevel::NOTICE => OutputInterface::VERBOSITY_NORMAL
+        ], [
+            LogLevel::DEBUG => 'plain',
+            LogLevel::INFO  => 'plain',
+        ]);
+    }
+
+    protected function writeError(OutputInterface $output, $message)
+    {
+        if ($output instanceof ConsoleOutputInterface) {
+            $output = $output->getErrorOutput();
+        }
+
+        $output->writeln($this->getHelper('formatter')->formatBlock([$message], 'error'));
     }
 }
