@@ -99,12 +99,12 @@ class PingDriveCommand extends Command
 
             case 'http':
                 if ($output->isVerbose()) {
-                    $output->writeln('The URL is a regular HTTP URL, will query it to get more information');
+                    $output->writeln('The URL is not a Google Drive URL, will try to ping it by a HTTP request');
                 }
                 return $this->processHttpUrl($output, $urlData['url']) ? 0 : 1;
 
             default:
-                $this->writeError($output, 'The given URL string has an unknown type');
+                $this->writeError($output, 'The given URL is not a URL');
                 return 1;
         }
     }
@@ -260,7 +260,9 @@ class PingDriveCommand extends Command
                 $this->writeGoogleDriveFolderData($output, $drive, $file);
                 break;
             default:
-                $output->writeln('<info>The URL is a Google Drive file with an unknown type ('.$file->getMimeType().')</info>');
+                $output->writeln('<info>The URL is a Google Drive file</info>');
+                $output->writeln('Name: '.$file->getName());
+                $output->writeln('Type: '.$file->getMimeType());
         }
 
         return true;
