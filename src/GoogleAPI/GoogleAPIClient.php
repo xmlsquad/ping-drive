@@ -7,11 +7,17 @@ use Psr\Log\NullLogger;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
- * An authenticated Google API client
+ * An authenticated Google API client. The API V3 is used.
  *
  * @ignore A single class for all the services is made for easy Google API mocking in tests
  *
+ * @property-read \Google_Service_Drive $driveService
+ * @property-read \Google_Service_Sheets $sheetsService
+ * @property-read \Google_Service_Slides $slidesService
+ * ...and all the other services
+ *
  * @author Surgie Finesse
+ * @link https://developers.google.com/drive/api/v3/reference/
  * @link https://github.com/google/google-api-php-client
  */
 class GoogleAPIClient
@@ -70,19 +76,22 @@ class GoogleAPIClient
         $this->client->setScopes($scopes);
         $this->client->setAccessType('offline');
 
-        $this->logger->info('Getting the Google API client secret from `'.$clientSecretFile.'`');
+        $this->logger->info('Getting the Google API client secret from the `'.$clientSecretFile.'` file');
         $this->client->setAuthConfig($this->loadCredentialJSON($clientSecretFile));
 
+        // Getting an access token
         if ($accessTokenFile !== null && !$forceAuthenticate && file_exists($accessTokenFile)) {
-            $this->logger->info('Getting the last Google API access token from `'.$accessTokenFile.'`');
+            $this->logger->info('Getting the last Google API access token from the `'.$accessTokenFile.'` file');
             $this->client->setAccessToken($this->loadCredentialJSON($accessTokenFile));
         } else {
+            // Getting an auth code
             $authUrl = $this->client->createAuthUrl();
             $authCode = $getAuthCode($authUrl);
             if (!is_string($authCode) || $authCode === '') {
                 throw new \LogicException('The $getAuthCode function has returned a not-string or an empty string');
             }
 
+            // Authenticating
             $this->logger->info('Sending the authentication code to Google');
             $accessToken = $this->client->fetchAccessTokenWithAuthCode($authCode);
             if (isset($accessToken['error_description'])) {
@@ -90,13 +99,15 @@ class GoogleAPIClient
             }
             $this->logger->notice('Authenticated successfully');
 
+            // Saving the token
             if ($accessTokenFile !== null) {
-                $this->logger->info('Saving the access token to `'.$accessTokenFile.'`'
+                $this->logger->info('Saving the access token to the `'.$accessTokenFile.'` file'
                     . ', so subsequent executions will not prompt for authorization');
                 $this->saveCredentialJSON($accessTokenFile, $accessToken);
             }
         }
 
+        // Refreshing the access token if required
         if ($this->client->isAccessTokenExpired()) {
             $this->logger->info('The access token is expired; refreshing the token');
             $accessToken = $this->client->fetchAccessTokenWithRefreshToken($this->client->getRefreshToken());
@@ -105,12 +116,31 @@ class GoogleAPIClient
             }
 
             if ($accessTokenFile !== null) {
-                $this->logger->info('Saving the refreshed access token to `'.$accessTokenFile.'`');
+                $this->logger->info('Saving the refreshed access token to the `'.$accessTokenFile.'` file');
                 $this->saveCredentialJSON($accessTokenFile, $accessToken);
             }
         }
 
         $this->logger->info('The Google authentication is completed');
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * Gets Google services for the magic properties
+     */
+    public function __get($name)
+    {
+        if (substr($name, -7) === 'Service') {
+            $serviceClass = 'Google_Service_'.ucfirst(substr($name, 0, -7));
+            if (!class_exists($serviceClass)) {
+                throw new \LogicException('The '.$name.' Google service doesn\'t exist');
+            }
+
+            return new $serviceClass($this->client);
+        }
+
+        throw new \LogicException('Undefined property: '.static::class.'::$'.$name);
     }
 
     /**

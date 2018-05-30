@@ -39,7 +39,7 @@ class PingDriveCommand extends Command
     protected $filesystem;
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      *
      * @param \ForikalUK\PingDrive\GoogleAPI\GoogleAPIClient|null $googleAPIFactory Google API factory
      */
@@ -52,7 +52,7 @@ class PingDriveCommand extends Command
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     protected function configure()
     {
@@ -77,7 +77,7 @@ class PingDriveCommand extends Command
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
@@ -88,12 +88,25 @@ class PingDriveCommand extends Command
             return 1;
         }
 
-        $googleAPIClient = $this->getAuthenticatedGoogleAPIClient($input, $output, $options);
-        if ($googleAPIClient === null) {
-            return 1;
-        }
+        $urlData = $this->getURLData($options['url']);
 
-        return 0;
+        switch ($urlData['type']) {
+            case 'google-drive':
+                if ($output->isVerbose()) {
+                    $output->writeln('The URL is a Google Drive URL, will get more information from Google');
+                }
+                return $this->processGoogleDriveId($input, $output, $options, $urlData['id']) ? 0 : 1;
+
+            case 'http':
+                if ($output->isVerbose()) {
+                    $output->writeln('The URL is a regular HTTP URL, will query it to get more information');
+                }
+                return $this->processHttpUrl($output, $urlData['url']) ? 0 : 1;
+
+            default:
+                $this->writeError($output, 'The given URL string has an unknown type');
+                return 1;
+        }
     }
 
     /**
@@ -101,7 +114,7 @@ class PingDriveCommand extends Command
      *
      * @param InputInterface $input
      * @param OutputInterface $output
-     * @return array[]|null If the input is incorrect, null is returned. Otherwise an options array is returned. It has
+     * @return array|null If the input is incorrect, null is returned. Otherwise an options array is returned. It has
      *    the following keys:
      *     - url (string)
      *     - forceAuthenticate (bool)
@@ -111,7 +124,7 @@ class PingDriveCommand extends Command
     protected function parseInitialInput(InputInterface $input, OutputInterface $output)
     {
         $options = [
-            'url' => trim($input->getOption('url')),
+            'url' => trim(ltrim($input->getOption('url'), '=')), // Symofony somewhy adds `=` if an option value is a URL
             'forceAuthenticate' => (bool)$input->getOption('force-authenticate')
         ];
 
@@ -126,7 +139,7 @@ class PingDriveCommand extends Command
         if ($options['clientSecretFile'] === null) {
             $needToParseConfigFile = true;
             if ($output->isVerbose()) {
-                $output->writeln('The client secret file path is not specified, will try to get it from a configuration file');
+                $output->writeln('The client secret file path is not specified, will try to get the path from a configuration file');
             }
         }
 
@@ -134,7 +147,7 @@ class PingDriveCommand extends Command
         if ($options['accessTokenFile'] === null) {
             $needToParseConfigFile = true;
             if ($output->isVerbose()) {
-                $output->writeln('The access token file path is not specified, will try to get it from a configuration file');
+                $output->writeln('The access token file path is not specified, will try to get the path from a configuration file');
             }
         }
 
@@ -166,6 +179,145 @@ class PingDriveCommand extends Command
     }
 
     /**
+     * Gets a URL type and data
+     *
+     * @param string $url The url
+     * @return array The `type` key contains the type name. Other keys depend on the type.
+     */
+    protected function getURLData($url)
+    {
+        /*
+         * Known URL types:
+         * https://drive.google.com/file/d/0B5q9i2h-vGaCc1ZBVnFhRzN2a3c/view?ths=true A Word file from Google Drive
+         * https://docs.google.com/document/d/1-phrJPVDf1SpQYU5SzJY00Ke0c6QJmILHrtm_pcQk4w/edit A Google Docs file
+         * https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCQXhLZFNLT2JyV0U A Google Drive folder
+         * https://drive.google.com/open?id=0B5q9i2h-vGaCYUE0ZTM4MDhseTQ A Google Drive shared file
+         * https://docs.google.com/spreadsheets/d/13QGip-d_Z88Xru64pEFRyFVDKujDOUjciy35Qytw-Qc/edit A Google Sheets file
+         * https://docs.google.com/presentation/d/1R1oF7zmnSDX3w3FBpyCTJnjvOu68C7Q2MH4kI4xMFWc/edit A Google Slides file
+         */
+
+        // Is it a Google Drive|Docs URL?
+        if (preg_match(
+            '~^(https?://)?(drive|docs)\.google\.[a-z]+/.*(/d/|/folders/|[\?&]id=)([a-z0-9\-_]{20,})([/?#]|$)~i',
+            $url,
+            $matches
+        )) {
+            // Any Google Drive item can be obtained using a single API method: https://developers.google.com/drive/api/v2/reference/files/get
+            return [
+                'type' => 'google-drive',
+                'id' => $matches[4]
+            ];
+        }
+
+        // Is it a URL?
+        if (preg_match('~^(https?://)?[a-z0-9.@\-_\x{0080}-\x{FFFF}]+(:[0-9]+)?(/|$)~iu', $url, $matches)) {
+            return [
+                'type' => 'http',
+                'url' => ($matches[1] ? '' : 'http://').$url
+            ];
+        }
+
+        return ['type' => 'unknown'];
+    }
+
+    /**
+     * Gets a Google Drive item (file or folder) information and prints it to the output
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @param array $options Input options received from the parseInitialInput method
+     * @param string $id The item id
+     * @return bool True, if the item is found and accessible, and false, if not
+     * @link https://developers.google.com/drive/api/v2/reference/files/get
+     */
+    protected function processGoogleDriveId(InputInterface $input, OutputInterface $output, array $options, $id)
+    {
+        $googleAPIClient = $this->getAuthenticatedGoogleAPIClient($input, $output, $options);
+        if ($googleAPIClient === null) {
+            return false;
+        }
+
+        $drive = $googleAPIClient->driveService;
+
+        try {
+            $file = $drive->files->get($id);
+        } catch (\Google_Service_Exception $exception) {
+            switch ($exception->getCode()) {
+                case 403:
+                    $this->writeError($output, 'The Google Drive URL is no accessible: access denied');
+                    break;
+                case 404:
+                    $this->writeError($output, 'The Google Drive URL is no accessible: file not found');
+                    break;
+                default:
+                    $this->writeError($output, 'The Google Drive URL is no accessible: '.$exception->getMessage());
+            }
+            return false;
+        }
+
+        switch ($file->getMimeType()) {
+            case 'application/vnd.google-apps.folder':
+                $this->writeGoogleDriveFolderData($output, $drive, $file);
+                break;
+            default:
+                $output->writeln('<info>The URL is a Google Drive file with an unknown type ('.$file->getMimeType().')</info>');
+        }
+
+        return true;
+    }
+
+    /**
+     * Prints a URL ping result as if the result is a Google Drive folder
+     *
+     * @param OutputInterface $output
+     * @param \Google_Service_Drive $drive The Drive API service
+     * @param \Google_Service_Drive_DriveFile $folder The folder
+     * @link https://stackoverflow.com/a/42055925/1118709
+     */
+    protected function writeGoogleDriveFolderData(
+        OutputInterface $output,
+        \Google_Service_Drive $drive,
+        \Google_Service_Drive_DriveFile $folder
+    ) {
+        $output->writeln('<info>The URL is a Google Drive folder</info>');
+        $output->writeln('Name: '.$folder->getName());
+        $output->writeln('Content:');
+
+        $pageToken = null;
+
+        do {
+            $children = $drive->files->listFiles([
+                'pageSize' => 1000,
+                'pageToken' => $pageToken,
+                'q' => "'{$folder->getId()}' in parents",
+                'fields' => 'nextPageToken, files(id,name,mimeType)'
+            ]);
+
+            foreach ($children as $child) {
+                /** @var \Google_Service_Drive_DriveFile $child */
+                $output->writeln(
+                    ' - A '.($child->getMimeType() === 'application/vnd.google-apps.folder' ? 'folder' : 'file')
+                    .'. Name: '.$child->getName()
+                );
+            }
+
+            $pageToken = $children->getNextPageToken();
+        } while ($pageToken);
+    }
+
+    /**
+     * Gets an HTTP URL information and prints it to the output
+     *
+     * @param OutputInterface $output
+     * @param string $url The URL
+     * @return bool True, if the URL is available, and false, if not
+     */
+    protected function processHttpUrl(OutputInterface $output, $url)
+    {
+        // todo
+    }
+
+    /**
      * Makes and authenticates an Google API client by interacting with the user
      *
      * @param InputInterface $input
@@ -183,8 +335,7 @@ class PingDriveCommand extends Command
                 $options['accessTokenFile'],
                 [
                     \Google_Service_Drive::DRIVE_READONLY,
-                    \Google_Service_Sheets::SPREADSHEETS_READONLY,
-                    \Google_Service_Slides::PRESENTATIONS_READONLY
+                    \Google_Service_Sheets::SPREADSHEETS_READONLY
                 ],
                 function ($authURL) use ($input, $output) {
                     $output->writeln('<info>You need to authenticate to your Google account to proceed</info>');
@@ -228,7 +379,7 @@ class PingDriveCommand extends Command
         $configFilePath = $this->findConfigFile();
         $configFileDir = dirname($configFilePath);
         if ($output->isVerbose()) {
-            $output->writeln('Reading options from `' . $configFilePath . '`');
+            $output->writeln('Reading options from the `' . $configFilePath . '` configuration file');
         }
 
         try {
@@ -325,6 +476,12 @@ class PingDriveCommand extends Command
         ]);
     }
 
+    /**
+     * Prints an error to an output
+     *
+     * @param OutputInterface $output
+     * @param string $message The error message
+     */
     protected function writeError(OutputInterface $output, $message)
     {
         if ($output instanceof ConsoleOutputInterface) {
