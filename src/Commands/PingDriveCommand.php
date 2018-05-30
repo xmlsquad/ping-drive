@@ -1,9 +1,9 @@
 <?php
 
-namespace ForikalUK\PingDrive\Commands;
+namespace Forikal\PingDrive\Commands;
 
-use ForikalUK\PingDrive\GoogleAPI\GoogleAPIClient;
-use ForikalUK\PingDrive\GoogleAPI\GoogleAPIFactory;
+use Forikal\PingDrive\GoogleAPI\GoogleAPIClient;
+use Forikal\PingDrive\GoogleAPI\GoogleAPIFactory;
 use Psr\Log\LogLevel;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
@@ -29,7 +29,7 @@ class PingDriveCommand extends Command
     const CONFIG_FILE_NAME = 'scapesettings.yaml';
 
     /**
-     * @var GoogleAPIClient Google API factory
+     * @var GoogleAPIFactory Google API factory
      */
     protected $googleAPIFactory;
 
@@ -41,7 +41,7 @@ class PingDriveCommand extends Command
     /**
      * {@inheritDoc}
      *
-     * @param \ForikalUK\PingDrive\GoogleAPI\GoogleAPIClient|null $googleAPIFactory Google API factory
+     * @param GoogleAPIFactory|null $googleAPIFactory Google API factory
      */
     public function __construct(GoogleAPIFactory $googleAPIFactory = null)
     {
@@ -424,7 +424,7 @@ class PingDriveCommand extends Command
                 . ' Make sure the working directory is readable.');
         }
 
-        for ($i = 0; $i < 10000; ++$i) { // for protects from an infinite loop
+        for ($i = 0; $i < 10000; ++$i) { // `for` protects from an infinite loop
             $file = $directory.DIRECTORY_SEPARATOR.static::CONFIG_FILE_NAME;
 
             if (is_file($file)) {

@@ -19,7 +19,7 @@
     },
     "autoload": {
         "psr-4": {
-            "ForikalUK\\PingDrive\\": "src/"
+            "Forikal\\PingDrive\\": "src/"
         }
     },
     "bin": [

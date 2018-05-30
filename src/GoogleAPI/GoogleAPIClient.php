@@ -1,6 +1,6 @@
 <?php
 
-namespace ForikalUK\PingDrive\GoogleAPI;
+namespace Forikal\PingDrive\GoogleAPI;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;

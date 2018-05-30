@@ -5,7 +5,7 @@ require_once __DIR__.'/vendor/autoload.php';
 
 $application = new \Symfony\Component\Console\Application('Ping Drive', '0.0');
 
-$application->add($defaultCommand = new \ForikalUK\PingDrive\Commands\PingDriveCommand());
+$application->add($defaultCommand = new \Forikal\PingDrive\Commands\PingDriveCommand());
 $application->setDefaultCommand($defaultCommand->getName());
 
 $application->run();
