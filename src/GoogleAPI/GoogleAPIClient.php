@@ -7,7 +7,7 @@ use Psr\Log\NullLogger;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
- * An authenticated Google API client. The API V3 is used.
+ * A Google API client. The API V3 is used.
  *
  * @ignore A single class for all the services is made for easy Google API mocking in tests
  *
@@ -54,7 +54,7 @@ class GoogleAPIClient
     }
 
     /**
-     * Authenticates the client
+     * Authenticates the client by asking user to go to the URL and paste the code given by Google
      *
      * @param string $clientSecretFile Path to the API client secret JSON file
      * @param string|null $accessTokenFile Path to the access token JSON file. Optional. The file may not exist.

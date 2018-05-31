@@ -202,7 +202,7 @@ class PingDriveCommand extends Command
             $url,
             $matches
         )) {
-            // Any Google Drive item can be obtained using a single API method: https://developers.google.com/drive/api/v2/reference/files/get
+            // Any Google Drive item can be obtained using a single API method: https://developers.google.com/drive/api/v3/reference/files/get
             return [
                 'type' => 'google-drive',
                 'id' => $matches[4]
@@ -228,7 +228,7 @@ class PingDriveCommand extends Command
      * @param array $options Input options received from the parseInitialInput method
      * @param string $id The item id
      * @return bool True, if the item is found and accessible, and false, if not
-     * @link https://developers.google.com/drive/api/v2/reference/files/get
+     * @link https://developers.google.com/drive/api/v3/reference/files/get
      */
     protected function processGoogleDriveId(InputInterface $input, OutputInterface $output, array $options, $id)
     {
@@ -320,7 +320,7 @@ class PingDriveCommand extends Command
     }
 
     /**
-     * Makes and authenticates an Google API client by interacting with the user
+     * Makes and authenticates a Google API client by interacting with the user
      *
      * @param InputInterface $input
      * @param OutputInterface $output
