@@ -7,6 +7,9 @@ use Forikal\PingDrive\GoogleAPI\GoogleAPIFactory;
 use Psr\Log\LogLevel;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
+use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Helper\TableCell;
+use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Logger\ConsoleLogger;
@@ -17,7 +20,7 @@ use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Yaml;
 
 /**
- * Pings a Google Drive folder, Google Docs, Google Sheets or Google Slides URL
+ * Pings a Google Drive file or folder URL
  *
  * @author Surgie Finesse
  */
@@ -259,6 +262,13 @@ class PingDriveCommand extends Command
             case 'application/vnd.google-apps.folder':
                 $this->writeGoogleDriveFolderData($output, $drive, $file);
                 break;
+            case 'application/vnd.google-apps.spreadsheet':
+                $this->writeGoogleSheetData($output, $googleAPIClient->sheetsService, $file);
+                break;
+            case 'application/vnd.google-apps.presentation':
+                $output->writeln('<info>The URL is a Google Slides file</info>');
+                $output->writeln('Name: '.$file->getName());
+                break;
             default:
                 $output->writeln('<info>The URL is a Google Drive file</info>');
                 $output->writeln('Name: '.$file->getName());
@@ -305,6 +315,36 @@ class PingDriveCommand extends Command
 
             $pageToken = $children->getNextPageToken();
         } while ($pageToken);
+    }
+
+    // @link https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/get
+    protected function writeGoogleSheetData (
+        OutputInterface $output,
+        \Google_Service_Sheets $service,
+        \Google_Service_Drive_DriveFile $spreadsheet
+    ) {
+        $output->writeln('<info>The URL is a Google Sheets file</info>');
+        $output->writeln('Name: '.$spreadsheet->getName());
+
+        $spreadsheetData = $service->spreadsheets->get($spreadsheet->getId(), [
+            'includeGridData' => true,
+            'ranges' => ['A1:E5']
+        ]);
+
+        $sheetsNames = [];
+        foreach ($spreadsheetData->getSheets() as $sheet) {
+            /** @var \Google_Service_Sheets_Sheet $sheet (the SDK type hint is incorrect) */
+            $sheetsNames[] = $sheet->getProperties()->getTitle();
+        }
+
+        if (!$sheetsNames) {
+            $output->writeln('The file has no sheets');
+            return;
+        }
+
+        $output->writeln('Sheets: '.implode(', ', $sheetsNames));
+        $output->writeln('A piece of the first sheet content:');
+        $this->writeGoogleSheetTable($output, $spreadsheetData->getSheets()[0]);
     }
 
     /**
@@ -491,5 +531,55 @@ class PingDriveCommand extends Command
         }
 
         $output->writeln($this->getHelper('formatter')->formatBlock([$message], 'error'));
+    }
+
+    /**
+     * Prints a Google Sheet as a table
+     *
+     * @param OutputInterface $output
+     * @param \Google_Service_Sheets_Sheet $sheet
+     * @link http://symfony.com/doc/3.4/components/console/helpers/table.html
+     */
+    protected function writeGoogleSheetTable(OutputInterface $output, \Google_Service_Sheets_Sheet $sheet)
+    {
+        $table = new Table($output);
+        $merges = $sheet->getMerges(); /** @var \Google_Service_Sheets_GridRange[] $merges (the SDK type hint is incorrect) */
+
+        foreach ($sheet->getData()[0]->getRowData() as $rowIndex => $sheetRow) {
+            /** @var \Google_Service_Sheets_RowData $sheetRow */
+            // TableSeparator is not used here because rowspans break when it is used
+
+            $tableRow = [];
+
+            foreach ($sheetRow->getValues() as $columnIndex => $sheetCell) {
+                $colspan = $rowspan = 1;
+
+                /** @var \Google_Service_Sheets_CellData $sheetCell (the SDK type hint is incorrect) */
+                foreach ($merges as $merge) {
+                    // The end indexes are not inclusive
+                    if (
+                        $columnIndex >= $merge->getStartColumnIndex() && $columnIndex < $merge->getEndColumnIndex() &&
+                        $rowIndex >= $merge->getStartRowIndex() && $rowIndex < $merge->getEndRowIndex()
+                    ) {
+                        if ($columnIndex === $merge->getStartColumnIndex() && $rowIndex === $merge->getStartRowIndex()) {
+                            $colspan = $merge->getEndColumnIndex() - $columnIndex;
+                            $rowspan = $merge->getEndRowIndex() - $rowIndex;
+                            break;
+                        } else {
+                            continue 2;
+                        }
+                    }
+                }
+
+                $tableRow[] = new TableCell((string)$sheetCell->getFormattedValue(), [
+                    'colspan' => $colspan,
+                    'rowspan' => $rowspan
+                ]);
+            }
+
+            $table->addRow($tableRow);
+        }
+
+        $table->render();
     }
 }

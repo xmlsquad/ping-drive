@@ -44,7 +44,7 @@ php vendor/bin/ping-drive ...
 The command operates behalf a Google user so you will need to authenticate during the first run. 
 To do it, run the command and follow its instructions.
 
-The command has the following signature:
+The command signature:
 
 ```bash
 ping-drive -v -u=URL --client-secret-file=CLIENT-SECRET-FILE --access-token-file=ACCESS-TOKEN-FILE --force-authenticate -q
@@ -59,7 +59,7 @@ ping-drive -v -u=URL --client-secret-file=CLIENT-SECRET-FILE --access-token-file
 
 The command prints the URL information:
 
-* If it is a Google Folder, lists the contents of the folder
+* If it is a Google Folder, lists the contents of the folder.
 * If it is a Google Sheet, prints the name of the Sheet and some of the contents of the sheet.
 * If it is another type of file hosted on Google Drive, prints the name and type of the file.
 * If it is inaccessible Google Drive file, prints the corresponding message. 
@@ -68,7 +68,7 @@ The command prints the URL information:
 Usage example:
 
 ```bash
-$ php vendor/bin/ping-drive -v --url="https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCQXhLZFNLT2JyV0U"
+php vendor/bin/ping-drive -v --url="https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCQXhLZFNLT2JyV0U"
 # Prints the folder content
 ```
 
@@ -84,7 +84,7 @@ if [[ ping-drive -q -u="..." ]]; then echo "Success!"; else echo "Fail"; fi
 1. Open [Google API console](http://console.developers.google.com).
 2. Create a project or select an existing project.
 3. Enable the following APIs in the project: [Drive](https://console.developers.google.com/apis/api/drive.googleapis.com) and [Sheets](https://console.developers.google.com/apis/api/sheets.googleapis.com).
-4. Go to the "Credentials" section, "Credentials" tab, and create an "OAuth client ID" credential. Or use an existing OAuth credentials.
+4. Go to the "Credentials" section, "Credentials" tab and create an "OAuth client ID" credential. Or use an existing OAuth credential.
 5. Click the download button (⬇️) at the right in the "OAuth 2.0 client IDs" list.
 
 ### Using with configuration file
@@ -92,8 +92,8 @@ if [[ ping-drive -q -u="..." ]]; then echo "Success!"; else echo "Fail"; fi
 The client secret and the access token paths can be read from a configuration file. 
 In this case you don't need to set this options while starting the command.
 
-The configuration file must be names `scapesettings.yaml` and be located in the directory where the command is run or
-in one of the parent directories. [scapesettings.yaml.sample](scapesettings.yaml.sample) is an example of the configuration file with required parameters.
+The configuration file must be named `scapesettings.yaml` and located in the directory where the command is run or in one of the parent directories.
+[scapesettings.yaml.sample](scapesettings.yaml.sample) is an example of the configuration file with required parameters.
 
 ## Contribution
 

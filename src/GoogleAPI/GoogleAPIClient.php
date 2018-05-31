@@ -7,7 +7,7 @@ use Psr\Log\NullLogger;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
- * A Google API client. The API V3 is used.
+ * A Google API client
  *
  * @ignore A single class for all the services is made for easy Google API mocking in tests
  *
