@@ -2,6 +2,7 @@
 
 namespace Forikal\PingDrive\Commands;
 
+use Forikal\Library\Console\ConsoleLogger;
 use Forikal\Library\GoogleAPI\GoogleAPIClient;
 use Forikal\Library\GoogleAPI\GoogleAPIFactory;
 use Psr\Log\LogLevel;
@@ -11,7 +12,6 @@ use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableCell;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\Question;
@@ -95,7 +95,7 @@ class PingDriveCommand extends Command
         switch ($urlData['type']) {
             case 'google-drive':
                 if ($output->isVerbose()) {
-                    $output->writeln('The URL point to Google Drive, will get more information from Google');
+                    $output->writeln('The URL points to Google Drive, will get more information from Google');
                 }
                 return $this->processGoogleDriveId($input, $output, $options, $urlData['id']) ? 0 : 1;
 
@@ -256,13 +256,13 @@ class PingDriveCommand extends Command
         }
 
         switch ($file->getMimeType()) {
-            case 'application/vnd.google-apps.folder':
+            case GoogleAPIClient::MIME_TYPE_DRIVE_FOLDER:
                 $this->writeGoogleDriveFolderData($output, $drive, $file);
                 break;
-            case 'application/vnd.google-apps.spreadsheet':
+            case GoogleAPIClient::MIME_TYPE_GOOGLE_SPREADSHEET:
                 $this->writeGoogleSheetData($output, $googleAPIClient->sheetsService, $file);
                 break;
-            case 'application/vnd.google-apps.presentation':
+            case GoogleAPIClient::MIME_TYPE_GOOGLE_PRESENTATION:
                 $output->writeln('<info>The URL is a Google Slides file</info>');
                 $output->writeln('Name: '.$file->getName());
                 break;
@@ -305,7 +305,7 @@ class PingDriveCommand extends Command
             foreach ($children as $child) {
                 /** @var \Google_Service_Drive_DriveFile $child */
                 $output->writeln(
-                    ' - A '.($child->getMimeType() === 'application/vnd.google-apps.folder' ? 'folder' : 'file')
+                    ' - A '.($child->getMimeType() === GoogleAPIClient::MIME_TYPE_DRIVE_FOLDER ? 'folder' : 'file')
                     .'. Name: '.$child->getName()
                 );
             }
@@ -367,7 +367,9 @@ class PingDriveCommand extends Command
                 function ($authURL) use ($input, $output) {
                     $output->writeln('<info>You need to authenticate to your Google account to proceed</info>');
                     $output->writeln('Open the following URL in a browser, get an auth code and paste it below:');
+                    $output->writeln('');
                     $output->writeln($authURL, OutputInterface::OUTPUT_PLAIN);
+                    $output->writeln('');
 
                     $helper = $this->getHelper('question');
                     $question = new Question('Auth code: ');
@@ -498,8 +500,9 @@ class PingDriveCommand extends Command
             LogLevel::INFO   => OutputInterface::VERBOSITY_VERBOSE,
             LogLevel::NOTICE => OutputInterface::VERBOSITY_NORMAL
         ], [
-            LogLevel::DEBUG => 'plain',
-            LogLevel::INFO  => 'plain',
+            LogLevel::DEBUG  => '',
+            LogLevel::INFO   => '',
+            LogLevel::NOTICE => 'info'
         ]);
     }
 
@@ -515,7 +518,7 @@ class PingDriveCommand extends Command
             $output = $output->getErrorOutput();
         }
 
-        $output->writeln($this->getHelper('formatter')->formatBlock([$message], 'error'));
+        $output->writeln($this->getHelper('formatter')->formatBlock($message, 'error'));
     }
 
     /**
