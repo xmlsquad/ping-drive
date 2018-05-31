@@ -2,8 +2,8 @@
 
 namespace Forikal\PingDrive\Commands;
 
-use Forikal\PingDrive\GoogleAPI\GoogleAPIClient;
-use Forikal\PingDrive\GoogleAPI\GoogleAPIFactory;
+use Forikal\Library\GoogleAPI\GoogleAPIClient;
+use Forikal\Library\GoogleAPI\GoogleAPIFactory;
 use Psr\Log\LogLevel;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;

@@ -11,11 +11,11 @@
     ],
     "require": {
         "php": ">=5.5.9",
+        "forikal-uk/xml-authoring-library": "^0.0.3",
         "symfony/console": "^3.4",
         "symfony/yaml": "^3.4",
         "symfony/filesystem": "^3.4",
-        "google/apiclient": "^2.0",
-        "psr/log": "^1.0"
+        "google/apiclient": "^2.0"
     },
     "autoload": {
         "psr-4": {
