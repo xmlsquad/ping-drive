@@ -19,6 +19,11 @@ You can install the command as a standalone application. Open a terminal and run
 
 ```bash
 composer create-project forikal-uk/ping-drive command
+
+# or 
+
+git clone https://github.com/forikal-uk/ping-drive.git command
+composer install -d command
 ```
 
 Replace `command` with a path to a directory where the command must be installed. In this case the command is started by running:
