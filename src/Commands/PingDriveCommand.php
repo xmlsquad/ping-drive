@@ -9,7 +9,6 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableCell;
-use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Logger\ConsoleLogger;
@@ -96,15 +95,13 @@ class PingDriveCommand extends Command
         switch ($urlData['type']) {
             case 'google-drive':
                 if ($output->isVerbose()) {
-                    $output->writeln('The URL is a Google Drive URL, will get more information from Google');
+                    $output->writeln('The URL point to Google Drive, will get more information from Google');
                 }
                 return $this->processGoogleDriveId($input, $output, $options, $urlData['id']) ? 0 : 1;
 
             case 'http':
-                if ($output->isVerbose()) {
-                    $output->writeln('The URL is not a Google Drive URL, will try to ping it by a HTTP request');
-                }
-                return $this->processHttpUrl($output, $urlData['url']) ? 0 : 1;
+                $this->writeError($output, 'The URL does NOT point to a file or folder on Google Drive');
+                return 1;
 
             default:
                 $this->writeError($output, 'The given URL is not a URL');
@@ -345,18 +342,6 @@ class PingDriveCommand extends Command
         $output->writeln('Sheets: '.implode(', ', $sheetsNames));
         $output->writeln('A piece of the first sheet content:');
         $this->writeGoogleSheetTable($output, $spreadsheetData->getSheets()[0]);
-    }
-
-    /**
-     * Gets an HTTP URL information and prints it to the output
-     *
-     * @param OutputInterface $output
-     * @param string $url The URL
-     * @return bool True, if the URL is available, and false, if not
-     */
-    protected function processHttpUrl(OutputInterface $output, $url)
-    {
-        // todo
     }
 
     /**
