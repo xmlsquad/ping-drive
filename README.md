@@ -15,6 +15,8 @@ This simple command should be used to test our connection and access to a specif
 
 ## Installation
 
+### As a standalone project
+
 You can install the command as a standalone application. Open a terminal and run:
 
 ```bash
@@ -31,6 +33,8 @@ Replace `command` with a path to a directory where the command must be installed
 ```bash
 php command/ping-drive ...
 ```
+
+### As a project dependency
 
 Also you can install the command as a project dependency. Open a terminal, go to the project root directory and run:
 
