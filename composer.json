@@ -23,6 +23,6 @@
         }
     },
     "bin": [
-        "ping-drive"
+        "bin/ping-drive"
     ]
 }
