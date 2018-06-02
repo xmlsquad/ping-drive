@@ -193,7 +193,7 @@ class PingDriveCommand extends Command
 
         // Is it a Google Drive|Docs URL?
         if (preg_match(
-            '~^(https?://)?(drive|docs)\.google\.[a-z]+/.*(/d/|/folders/|[\?&]id=)([a-z0-9\-_]{20,})([/?#]|$)~i',
+            '~^(https?://)?(drive|docs)\.google\.[a-z]+/.*(/d/|/folders/|[\?&]id=)([a-z0-9\-_]{20,})([/?&#]|$)~i',
             $url,
             $matches
         )) {

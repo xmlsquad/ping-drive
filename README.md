@@ -106,4 +106,8 @@ The configuration file must be named `scapesettings.yaml` and located in the dir
 
 ## Contribution
 
-To be continued...
+1. Clone the repository.
+2. Install the dependencies by running `composer install` in a console.
+3. Make a change. Make sure the code follows the [PSR-2 standard](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-2-coding-style-guide.md).
+4. Test the code by running `composer test`. If the test fails, fix the code.
+5. Commit and push the changes.
