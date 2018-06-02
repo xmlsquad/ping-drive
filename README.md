@@ -17,26 +17,26 @@ This simple command should be used to test our connection and access to a specif
 
 ### As a standalone project
 
-You can install the command as a standalone application. Open a terminal and run:
+Open a terminal and run:
 
 ```bash
-composer create-project forikal-uk/ping-drive command
+composer create-project forikal-uk/ping-drive <directoryName>
 
 # or 
 
-git clone https://github.com/forikal-uk/ping-drive.git command
-composer install -d command
+git clone https://github.com/forikal-uk/ping-drive.git <directoryName>
+composer install -d <directoryName>
 ```
 
-Replace `command` with a path to a directory where the command must be installed. In this case the command is started by running:
+Replace `<directoryName>` with a path to a directory where the command must be installed. In this case the command is started by running:
 
 ```bash
-php command/ping-drive ...
+php <directoryName>/ping-drive ...
 ```
 
 ### As a project dependency
 
-Also you can install the command as a project dependency. Open a terminal, go to the project root directory and run:
+Open a terminal, go to the project root directory and run:
 
 ```bash
 composer require forikal-uk/ping-drive

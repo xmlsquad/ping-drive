@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": ">=5.5.9",
-        "forikal-uk/xml-authoring-library": "^0.0.4",
+        "forikal-uk/xml-authoring-library": "^0.0.5",
         "symfony/console": "^3.4",
         "symfony/yaml": "^3.4",
         "symfony/filesystem": "^3.4",
