@@ -5,14 +5,11 @@ namespace Forikal\PingDrive\Tests\Command;
 use Forikal\Library\GoogleAPI\GoogleAPIClient;
 use Forikal\Library\GoogleAPI\GoogleAPIFactory;
 use Forikal\PingDrive\Command\PingDriveCommand;
-use org\bovigo\vfs\vfsStream;
-use org\bovigo\vfs\vfsStreamDirectory;
-use org\bovigo\vfs\vfsStreamWrapper;
-use phpmock\phpunit\PHPMock;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * Tests the command by mocking the Google API.
@@ -22,9 +19,10 @@ use Symfony\Component\Console\Tester\CommandTester;
  */
 class PingDriveCommandTest extends TestCase
 {
-    // I don't test the "find config file within parent directories" here because it is already tested in AbstractCommandTest. Todo: remove this comment when the command extends AbstractCommand.
-
-    use PHPMock;
+    /**
+     * Path to a directory where to store temporary test files
+     */
+    const TEMP_DIR = __DIR__.DIRECTORY_SEPARATOR.'temp';
 
     /**
      * @var GoogleAPIFactory|\PHPUnit\Framework\MockObject\MockObject The Google API factory mock charged to the command
@@ -47,6 +45,11 @@ class PingDriveCommandTest extends TestCase
     protected $tokenPath;
 
     /**
+     * @var Filesystem Symfony filesystem helper
+     */
+    protected $filesystem;
+
+    /**
      * {@inheritdoc}
      */
     public function setUp()
@@ -59,11 +62,22 @@ class PingDriveCommandTest extends TestCase
         $application = new Application();
         $application->add($this->command);
 
-        vfsStreamWrapper::register();
-        vfsStreamWrapper::setRoot(new vfsStreamDirectory('test'));
-        $this->secretPath = vfsStream::url('test/secret.json');
-        $this->tokenPath = vfsStream::url('test/token.json');
+        $this->filesystem = new Filesystem();
+        $this->filesystem->remove(static::TEMP_DIR);
+        $this->filesystem->mkdir(static::TEMP_DIR);
+        $this->secretPath = static::TEMP_DIR.DIRECTORY_SEPARATOR.'secret.json';
+        $this->tokenPath = static::TEMP_DIR.DIRECTORY_SEPARATOR.'token.json';
         file_put_contents($this->secretPath, '{"secret": "top-secret-dont-see-it"}');
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function tearDown()
+    {
+        $this->filesystem->remove(static::TEMP_DIR);
+
+        parent::tearDown();
     }
 
     /**
@@ -573,21 +587,19 @@ class PingDriveCommandTest extends TestCase
 
     /**
      * Checks that the options are retrieved from a config file when they are not set through CLI arguments
+     *
+     * @dataProvider getOptionsFromConfigFileProvider
      */
-    public function testGetOptionsFromConfigFile()
+    public function testGetOptionsFromConfigFile($workindSubdirectory)
     {
-        $workingDirectory = vfsStream::url('test');
-        $this->getFunctionMock('Forikal\\PingDrive\\Command', 'getcwd')->expects($this->any())->willReturn($workingDirectory); // Mocks the getcwd function for the PingDriveCommand class
+        $configPath = static::TEMP_DIR.DIRECTORY_SEPARATOR.PingDriveCommand::CONFIG_FILE_NAME;
+        $secretPath = static::TEMP_DIR.DIRECTORY_SEPARATOR.'absolute-path.json';
+        $tokenRelativePath = '.'.DIRECTORY_SEPARATOR.'relative-path.json';
+        $tokenAbsolutePath = static::TEMP_DIR.DIRECTORY_SEPARATOR.$tokenRelativePath;
 
-        $configPath = vfsStream::url('test/'.PingDriveCommand::CONFIG_FILE_NAME);
-        $secretPath = vfsStream::url('test/absolute-path.json');
-        $tokenPath = $workingDirectory.'/./relative-path.json';
-        file_put_contents(
-            $configPath,
-            'google: {clientSecretFile: "'.$secretPath.'", accessTokenFile: "./relative-path.json"}'
-        );
+        file_put_contents($configPath, 'google: {clientSecretFile: "'.$secretPath.'", accessTokenFile: "'.$tokenRelativePath.'"}');
         file_put_contents($secretPath, '{"secret": "ok"}');
-        file_put_contents($tokenPath, '{"token": "ok"}');
+        file_put_contents($tokenAbsolutePath, '{"token": "ok"}');
 
         $this->googleAPIFactoryMock->method('make')->willReturnCallback(function ($logger) {
             $googleClientMock = $this->createMock('Google_Client');
@@ -596,6 +608,12 @@ class PingDriveCommandTest extends TestCase
             return $googleAPIClientMock = new GoogleAPIClient($googleClientMock, $logger);
         });
 
+        $oldWorkingDirectory = getcwd();
+        $workingDirectory = rtrim(static::TEMP_DIR.DIRECTORY_SEPARATOR.$workindSubdirectory, DIRECTORY_SEPARATOR);
+        $this->filesystem->mkdir($workingDirectory);
+        chdir($workingDirectory);
+
+        $this->assertEquals($workingDirectory, getcwd());
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
             'url' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ'
@@ -605,6 +623,17 @@ class PingDriveCommandTest extends TestCase
         $output = $commandTester->getDisplay();
         $this->assertContains('Reading options from the `'.$configPath .'` configuration file', $output);
         $this->assertContains('Getting the Google API client secret from the `'.$secretPath.'` file', $output);
-        $this->assertContains('Getting the last Google API access token from the `'.$tokenPath.'` file', $output);
+        $this->assertContains('Getting the last Google API access token from the `'.$tokenAbsolutePath.'` file', $output);
+
+        chdir($oldWorkingDirectory);
+    }
+
+    public function getOptionsFromConfigFileProvider()
+    {
+        return [
+            [''],
+            ['subdir'],
+            ['sub'.DIRECTORY_SEPARATOR.'sub'.DIRECTORY_SEPARATOR.'dir']
+        ];
     }
 }
