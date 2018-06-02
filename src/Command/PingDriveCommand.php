@@ -59,6 +59,8 @@ class PingDriveCommand extends Command
      */
     protected function configure()
     {
+        parent::configure();
+
         $this
             ->setName('ping-drive')
             ->setDescription('Pings a Google Drive folder, Google Docs, Google Sheets or Google Slides URL')
@@ -420,6 +422,7 @@ class PingDriveCommand extends Command
             $output->writeln('Reading options from the `' . $configFilePath . '` configuration file');
         }
 
+        // todo: Replace with AbstractCommand::getConfigOptions
         try {
             $configData = Yaml\Yaml::parseFile($configFilePath);
         } catch (Yaml\Exception\ParseException $exception) {
@@ -448,6 +451,8 @@ class PingDriveCommand extends Command
 
     /**
      * Finds a configuration file within the current working directory and its parents
+     *
+     * @todo Replace with AbstractCommand::getConfigFilename
      *
      * @return string The file path
      * @throws \RuntimeException If a file can't be found or read
@@ -517,6 +522,8 @@ class PingDriveCommand extends Command
 
     /**
      * Prints an error to an output
+     *
+     * @todo Replace with AbstractCommand::writeError
      *
      * @param OutputInterface $output
      * @param string $message The error message

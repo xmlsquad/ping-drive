@@ -8,16 +8,24 @@ use Forikal\PingDrive\Command\PingDriveCommand;
 use org\bovigo\vfs\vfsStream;
 use org\bovigo\vfs\vfsStreamDirectory;
 use org\bovigo\vfs\vfsStreamWrapper;
+use phpmock\phpunit\PHPMock;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Tester\CommandTester;
 
 /**
+ * Tests the command by mocking the Google API.
+ *
  * @link http://symfony.com/doc/current/console.html#testing-commands
  * @link http://symfony.com/doc/current/components/console/helpers/questionhelper.html#testing-a-command-that-expects-input
  */
 class PingDriveCommandTest extends TestCase
 {
+    // I don't test the "find config file within parent directories" here because it is already tested in AbstractCommandTest. Todo: remove this comment when the command extends AbstractCommand.
+
+    use PHPMock;
+
     /**
      * @var GoogleAPIFactory|\PHPUnit\Framework\MockObject\MockObject The Google API factory mock charged to the command
      */
@@ -27,6 +35,16 @@ class PingDriveCommandTest extends TestCase
      * @var PingDriveCommand|\PHPUnit\Framework\MockObject\MockObject A command instance charged with the mock Google API
      */
     protected $command;
+
+    /**
+     * @var string A path to the test file with a Google API secret
+     */
+    protected $secretPath;
+
+    /**
+     * @var string A path to the test file with a Google API token. This file doesn't exist, it is just a path.
+     */
+    protected $tokenPath;
 
     /**
      * {@inheritdoc}
@@ -43,8 +61,9 @@ class PingDriveCommandTest extends TestCase
 
         vfsStreamWrapper::register();
         vfsStreamWrapper::setRoot(new vfsStreamDirectory('test'));
-        file_put_contents(vfsStream::url('test/secret.json'), '{"secret": "top-secret-dont-see-it"}');
-        file_put_contents(vfsStream::url('test/token.json'), '{"token": "an-access-token-123"}');
+        $this->secretPath = vfsStream::url('test/secret.json');
+        $this->tokenPath = vfsStream::url('test/token.json');
+        file_put_contents($this->secretPath, '{"secret": "top-secret-dont-see-it"}');
     }
 
     /**
@@ -121,12 +140,11 @@ class PingDriveCommandTest extends TestCase
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'command' => $this->command->getName(),
             'url' => $url,
-            '--client-secret-file' => vfsStream::url('test/secret.json'),
-            '--access-token-file' => vfsStream::url('test/token.json')
+            '--client-secret-file' => $this->secretPath,
+            '--access-token-file' => $this->tokenPath
         ]);
-        $output = $commandTester->getDisplay();
+        $output = $commandTester->getDisplay(true);
         $this->assertContains('The URL is a Google Drive folder', $output);
         $this->assertContains('Name: '.$name, $output);
         $this->assertEquals(count($content), substr_count($output, "\n - A "));
@@ -203,10 +221,9 @@ class PingDriveCommandTest extends TestCase
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'command' => $this->command->getName(),
             'url' => $url,
-            '--client-secret-file' => vfsStream::url('test/secret.json'),
-            '--access-token-file' => vfsStream::url('test/token.json')
+            '--client-secret-file' => $this->secretPath,
+            '--access-token-file' => $this->tokenPath
         ]);
         $output = $commandTester->getDisplay();
         $this->assertContains('The URL is a Google Sheets file', $output);
@@ -266,10 +283,9 @@ class PingDriveCommandTest extends TestCase
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'command' => $this->command->getName(),
             'url' => $url,
-            '--client-secret-file' => vfsStream::url('test/secret.json'),
-            '--access-token-file' => vfsStream::url('test/token.json')
+            '--client-secret-file' => $this->secretPath,
+            '--access-token-file' => $this->tokenPath
         ]);
         $output = $commandTester->getDisplay();
         $this->assertContains('The URL is a Google Slides file', $output);
@@ -313,10 +329,9 @@ class PingDriveCommandTest extends TestCase
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'command' => $this->command->getName(),
             'url' => $url,
-            '--client-secret-file' => vfsStream::url('test/secret.json'),
-            '--access-token-file' => vfsStream::url('test/token.json')
+            '--client-secret-file' => $this->secretPath,
+            '--access-token-file' => $this->tokenPath
         ]);
         $output = $commandTester->getDisplay();
         $this->assertContains('The URL is a Google Drive file', $output);
@@ -354,10 +369,9 @@ class PingDriveCommandTest extends TestCase
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'command' => $this->command->getName(),
             'url' => $url,
-            '--client-secret-file' => vfsStream::url('test/secret.json'),
-            '--access-token-file' => vfsStream::url('test/token.json')
+            '--client-secret-file' => $this->secretPath,
+            '--access-token-file' => $this->tokenPath
         ]);
         $output = $commandTester->getDisplay();
         $this->assertContains($expectedMessage, $output);
@@ -368,7 +382,8 @@ class PingDriveCommandTest extends TestCase
     {
         return [
             ['https://drive.google.com/file/d/0B5q9i2h-vGaCc1ZBVnFhR-32a3c/view?ths=true', 404, 'The Google Drive URL is no accessible: file not found'],
-            ['https://drive.google.com/open?id=1x2J8-UrfHFZUsxOUX_jHbPdFe1xGB4FwxTenH58yA', 403, 'The Google Drive URL is no accessible: access denied']
+            ['https://drive.google.com/open?id=1x2J8-UrfHFZUsxOUX_jHbPdFe1xGB4FwxTenH58yA', 403, 'The Google Drive URL is no accessible: access denied'],
+            ['https://drive.google.com/file/d/0B5q9i2h-vGaCc1123VnFhR-32a3c', 400, 'The Google Drive URL is no accessible: Test']
         ];
     }
 
@@ -383,10 +398,9 @@ class PingDriveCommandTest extends TestCase
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'command' => $this->command->getName(),
             'url' => $url,
-            '--client-secret-file' => vfsStream::url('test/secret.json'),
-            '--access-token-file' => vfsStream::url('test/token.json')
+            '--client-secret-file' => $this->secretPath,
+            '--access-token-file' => $this->tokenPath
         ]);
         $output = $commandTester->getDisplay();
         $this->assertContains($expectedMessage, $output);
@@ -403,5 +417,194 @@ class PingDriveCommandTest extends TestCase
             ['Hello, world', 'The given URL is not a URL'],
             ['1+2', 'The given URL is not a URL']
         ];
+    }
+
+    /**
+     * Checks the user authentication
+     */
+    public function testUserAuthentication()
+    {
+        $this->googleAPIFactoryMock->method('make')->willReturnCallback(function ($logger) {
+            $driveFilesMock = $this->createMock('Google_Service_Drive_Resource_Files');
+            $driveFilesMock->method('get')->willThrowException(new \Google_Service_Exception('Test', 404));
+
+            $driveServiceMock = $this->createMock('Google_Service_Drive');
+            $driveServiceMock->files = $driveFilesMock;
+
+            $googleClientMock = $this->createMock('Google_Client');
+            $googleClientMock->method('createAuthUrl')->willReturn('http://auth.please');
+            $googleClientMock->method('fetchAccessTokenWithAuthCode')->with('auth-code')->willReturn(['token' => 'a-token']);
+            $googleClientMock->method('isAccessTokenExpired')->willReturn(false);
+
+            $googleAPIClientMock = new GoogleAPIClient($googleClientMock, $logger);
+            $googleAPIClientMock->driveService = $driveServiceMock;
+
+            return $googleAPIClientMock;
+        });
+
+        $commandTester = new CommandTester($this->command);
+        $commandTester->setInputs(['auth-code']);
+        $commandTester->execute([
+            'url' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ',
+            '--client-secret-file' => $this->secretPath,
+            '--access-token-file' => $this->tokenPath
+        ], [
+            'verbosity' => OutputInterface::VERBOSITY_VERBOSE
+        ]);
+        $output = $commandTester->getDisplay();
+        $this->assertNotContains('Reading options from', $output);
+        $this->assertContains('The URL points to Google Drive, will get more information from Google', $output);
+        $this->assertContains('Getting the Google API client secret from the `'.$this->secretPath.'` file', $output);
+        $this->assertContains('You need to authenticate to your Google account to proceed', $output);
+        $this->assertContains('Open the following URL in a browser, get an auth code and paste it below', $output);
+        $this->assertContains('http://auth.please', $output);
+        $this->assertContains('Sending the authentication code to Google', $output);
+        $this->assertContains('Authenticated successfully', $output);
+        $this->assertContains('Saving the access token to the `'.$this->tokenPath.'` file', $output);
+        $this->assertContains('The Google authentication is completed', $output);
+    }
+
+    /**
+     * Checks the command output when the user authentication fails
+     */
+    public function testFailUserAuthentication()
+    {
+        $this->googleAPIFactoryMock->method('make')->willReturnCallback(function ($logger) {
+            $googleClientMock = $this->createMock('Google_Client');
+            $googleClientMock->method('createAuthUrl')->willReturn('http://auth.please');
+            $googleClientMock->method('fetchAccessTokenWithAuthCode')->willReturn(['error' => 'test', 'error_description' => 'Just a test']);
+
+            return new GoogleAPIClient($googleClientMock, $logger);
+        });
+
+        $commandTester = new CommandTester($this->command);
+        $commandTester->setInputs(['auth-code']);
+        $commandTester->execute([
+            'url' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ',
+            '--client-secret-file' => $this->secretPath,
+            '--access-token-file' => $this->tokenPath
+        ]);
+        $output = $commandTester->getDisplay();
+        $this->assertContains('Failed to authenticate to Google: Google has declined the auth code: Just a test', $output);
+        $this->assertNotEquals(0, $commandTester->getStatusCode());
+    }
+
+    /**
+     * Checks that the user authentication is not required when there is an access token
+     */
+    public function testTokenAuthentication()
+    {
+        $this->googleAPIFactoryMock->method('make')->willReturnCallback(function ($logger) {
+            $driveFilesMock = $this->createMock('Google_Service_Drive_Resource_Files');
+            $driveFilesMock->method('get')->willThrowException(new \Google_Service_Exception('Test', 404));
+
+            $driveServiceMock = $this->createMock('Google_Service_Drive');
+            $driveServiceMock->files = $driveFilesMock;
+
+            $googleClientMock = $this->createMock('Google_Client');
+            $googleClientMock->method('isAccessTokenExpired')->willReturn(false);
+
+            $googleAPIClientMock = new GoogleAPIClient($googleClientMock, $logger);
+            $googleAPIClientMock->driveService = $driveServiceMock;
+
+            return $googleAPIClientMock;
+        });
+
+        file_put_contents($this->tokenPath, '{"token": "token123"}');
+
+        $commandTester = new CommandTester($this->command);
+        $commandTester->execute([
+            'url' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ',
+            '--client-secret-file' => $this->secretPath,
+            '--access-token-file' => $this->tokenPath
+        ], [
+            'verbosity' => OutputInterface::VERBOSITY_VERBOSE
+        ]);
+        $output = $commandTester->getDisplay();
+        $this->assertNotContains('Reading options from', $output);
+        $this->assertContains('The URL points to Google Drive, will get more information from Google', $output);
+        $this->assertContains('Getting the Google API client secret from the `'.$this->secretPath.'` file', $output);
+        $this->assertContains('Getting the last Google API access token from the `'.$this->tokenPath.'` file', $output);
+        $this->assertNotContains('You need to authenticate to your Google account to proceed', $output);
+        $this->assertContains('The Google authentication is completed', $output);
+    }
+
+    /**
+     * Checks that the --force-authenticate argument works
+     */
+    public function testForceAuthentication()
+    {
+        $this->googleAPIFactoryMock->method('make')->willReturnCallback(function ($logger) {
+            $driveFilesMock = $this->createMock('Google_Service_Drive_Resource_Files');
+            $driveFilesMock->method('get')->willThrowException(new \Google_Service_Exception('Test', 404));
+
+            $driveServiceMock = $this->createMock('Google_Service_Drive');
+            $driveServiceMock->files = $driveFilesMock;
+
+            $googleClientMock = $this->createMock('Google_Client');
+            $googleClientMock->method('createAuthUrl')->willReturn('http://auth.please');
+            $googleClientMock->method('fetchAccessTokenWithAuthCode')->willReturn(['token' => 'a-token']);
+            $googleClientMock->method('isAccessTokenExpired')->willReturn(false);
+
+            $googleAPIClientMock = new GoogleAPIClient($googleClientMock, $logger);
+            $googleAPIClientMock->driveService = $driveServiceMock;
+
+            return $googleAPIClientMock;
+        });
+
+        file_put_contents($this->tokenPath, '{"token": "broken-token"}');
+
+        $commandTester = new CommandTester($this->command);
+        $commandTester->setInputs(['foo']);
+        $commandTester->execute([
+            'url' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ',
+            '--client-secret-file' => $this->secretPath,
+            '--access-token-file' => $this->tokenPath,
+            '--force-authenticate' => true
+        ], [
+            'verbosity' => OutputInterface::VERBOSITY_VERBOSE
+        ]);
+        $output = $commandTester->getDisplay();
+        $this->assertContains('You need to authenticate to your Google account to proceed', $output);
+        $this->assertContains('Authenticated successfully', $output);
+        $this->assertContains('Saving the access token to the `'.$this->tokenPath.'` file', $output);
+        $this->assertContains('The Google authentication is completed', $output);
+    }
+
+    /**
+     * Checks that the options are retrieved from a config file when they are not set through CLI arguments
+     */
+    public function testGetOptionsFromConfigFile()
+    {
+        $workingDirectory = vfsStream::url('test');
+        $this->getFunctionMock('Forikal\\PingDrive\\Command', 'getcwd')->expects($this->any())->willReturn($workingDirectory); // Mocks the getcwd function for the PingDriveCommand class
+
+        $configPath = vfsStream::url('test/'.PingDriveCommand::CONFIG_FILE_NAME);
+        $secretPath = vfsStream::url('test/absolute-path.json');
+        $tokenPath = $workingDirectory.'/./relative-path.json';
+        file_put_contents(
+            $configPath,
+            'google: {clientSecretFile: "'.$secretPath.'", accessTokenFile: "./relative-path.json"}'
+        );
+        file_put_contents($secretPath, '{"secret": "ok"}');
+        file_put_contents($tokenPath, '{"token": "ok"}');
+
+        $this->googleAPIFactoryMock->method('make')->willReturnCallback(function ($logger) {
+            $googleClientMock = $this->createMock('Google_Client');
+            $googleClientMock->method('isAccessTokenExpired')->willThrowException(new \RuntimeException('Just to stop the command'));
+
+            return $googleAPIClientMock = new GoogleAPIClient($googleClientMock, $logger);
+        });
+
+        $commandTester = new CommandTester($this->command);
+        $commandTester->execute([
+            'url' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ'
+        ], [
+            'verbosity' => OutputInterface::VERBOSITY_VERBOSE
+        ]);
+        $output = $commandTester->getDisplay();
+        $this->assertContains('Reading options from the `'.$configPath .'` configuration file', $output);
+        $this->assertContains('Getting the Google API client secret from the `'.$secretPath.'` file', $output);
+        $this->assertContains('Getting the last Google API access token from the `'.$tokenPath.'` file', $output);
     }
 }
