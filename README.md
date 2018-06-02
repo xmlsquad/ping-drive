@@ -56,11 +56,11 @@ To do it, run the command and follow its instructions.
 The command signature:
 
 ```bash
-ping-drive -v -u=URL --client-secret-file=CLIENT-SECRET-FILE --access-token-file=ACCESS-TOKEN-FILE --force-authenticate -q
+ping-drive URL -v --client-secret-file=CLIENT-SECRET-FILE --access-token-file=ACCESS-TOKEN-FILE --force-authenticate -q
 ```
 
+* `URL` specifies a URL to ping. This argument is required.
 * `-v` or `--verbose` turns the verbose mode on. In this mode a detailed progress information is printed. Otherwise only the key information is printed.
-* `-u` or `--url` specifies a URL to ping. This option is required.
 * `--client-secret-file` specifies a path to a JSON file with a Google API client secret. See below how to get it.
 * `--access-token-file` specifies a path to a JSON file with a Google API access token. Access token file is optional. If a file path is set, the access token will be saved and subsequent executions will not prompt for authorization. If the given file doesn't exist, it will be created.
 * `--force-authenticate` makes the command prompt for Google authentication even if an access token is presented. You can use it when you face an authorization problem or need to authenticate to another account.
@@ -77,7 +77,7 @@ The command prints the URL information:
 Usage example:
 
 ```bash
-php vendor/bin/ping-drive -v --url="https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCQXhLZFNLT2JyV0U"
+php vendor/bin/ping-drive https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCQXhLZFNLT2JyV0U -v
 # Prints the folder content
 ```
 
@@ -85,7 +85,7 @@ The command exists with status code 0 if the file is accessible and status code 
 So the command can be used in complex bash scripts, for example:
 
 ```bash
-if [[ ping-drive -q -u="..." ]]; then echo "Success!"; else echo "Fail"; fi
+if [[ ping-drive -q ... ]]; then echo "Success!"; else echo "Fail"; fi
 ```
 
 ### How to get a Google API client secret file

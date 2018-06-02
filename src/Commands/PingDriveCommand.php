@@ -10,6 +10,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableCell;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
@@ -63,8 +64,7 @@ class PingDriveCommand extends Command
             ->setDescription('Pings a Google Drive folder, Google Docs, Google Sheets or Google Slides URL')
             ->setHelp('See the readme')
 
-            // Have to use option instead of argument because arguments are not supported in default commands
-            ->addOption('url', 'u', InputOption::VALUE_REQUIRED, 'The target item URL')
+            ->addArgument('url', InputArgument::REQUIRED, 'The target item URL')
 
             ->addOption('client-secret-file', null, InputOption::VALUE_REQUIRED, 'The path to an application client'
                 . ' secret file. If not specified, the command will try to get a path from a scapesettings.yaml file.'
@@ -124,14 +124,9 @@ class PingDriveCommand extends Command
     protected function parseInitialInput(InputInterface $input, OutputInterface $output): ?array
     {
         $options = [
-            'url' => trim(ltrim($input->getOption('url'), '=')), // Symofony somewhy adds `=` if an option value is a URL
+            'url' => $input->getArgument('url'),
             'forceAuthenticate' => (bool)$input->getOption('force-authenticate')
         ];
-
-        if ($options['url'] === '') {
-            $this->writeError($output, 'The required URL option is not given');
-            return null;
-        }
 
         $needToParseConfigFile = false;
 
