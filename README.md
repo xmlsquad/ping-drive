@@ -71,8 +71,8 @@ The command prints the URL information:
 * If it is a Google Folder, lists the contents of the folder.
 * If it is a Google Sheet, prints the name of the Sheet and some of the contents of the sheet.
 * If it is another type of file hosted on Google Drive, prints the name and type of the file.
-* If it is inaccessible Google Drive file, prints the corresponding message. 
-* If it is not a Google Drive URL, prints HTTP response code.
+* If it is an inaccessible Google Drive file, prints the corresponding message. 
+* Otherwise prints an error message.
 
 Usage example:
 
