@@ -102,7 +102,7 @@ The client secret and the access token paths can be read from a configuration fi
 In this case you don't need to set this options while starting the command.
 
 The configuration file must be named `scapesettings.yaml` and located in the directory where the command is run or in one of the parent directories.
-[scapesettings.yaml.sample](scapesettings.yaml.sample) is an example of the configuration file with required parameters.
+[scapesettings.yaml.dist](scapesettings.yaml.dist) is an example of the configuration file with required parameters.
 
 ## Contribution
 

@@ -1,6 +1,6 @@
 * text=auto
 
 # Casts line break symbols in text files to the LF symbol
-*.{php,json,md,yaml,yaml.sample} text eol=lf
+*.{php,json,md,yaml,yaml.dist} text eol=lf
 *.{gitignore,gitattributes} text eol=lf
 ping-drive text oel=lf
