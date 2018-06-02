@@ -10,7 +10,7 @@
         }
     ],
     "require": {
-        "php": ">=5.5.9",
+        "php": ">=7.1",
         "forikal-uk/xml-authoring-library": "^0.0.5",
         "symfony/console": "^3.4",
         "symfony/yaml": "^3.4",

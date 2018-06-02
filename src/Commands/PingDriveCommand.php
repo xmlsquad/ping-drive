@@ -49,7 +49,7 @@ class PingDriveCommand extends Command
     {
         parent::__construct();
 
-        $this->googleAPIFactory = $googleAPIFactory !== null ? $googleAPIFactory : new GoogleAPIFactory();
+        $this->googleAPIFactory = $googleAPIFactory ?? new GoogleAPIFactory();
         $this->filesystem = new Filesystem();
     }
 
@@ -121,7 +121,7 @@ class PingDriveCommand extends Command
      *     - clientSecretFile (string)
      *     - accessTokenFile (string|null)
      */
-    protected function parseInitialInput(InputInterface $input, OutputInterface $output)
+    protected function parseInitialInput(InputInterface $input, OutputInterface $output): ?array
     {
         $options = [
             'url' => trim(ltrim($input->getOption('url'), '=')), // Symofony somewhy adds `=` if an option value is a URL
@@ -184,7 +184,7 @@ class PingDriveCommand extends Command
      * @param string $url The url
      * @return array The `type` key contains the type name. Other keys depend on the type.
      */
-    protected function getURLData($url)
+    protected function getURLData(string $url): array
     {
         /*
          * Known URL types:
@@ -230,8 +230,12 @@ class PingDriveCommand extends Command
      * @return bool True, if the item is found and accessible, and false, if not
      * @link https://developers.google.com/drive/api/v3/reference/files/get
      */
-    protected function processGoogleDriveId(InputInterface $input, OutputInterface $output, array $options, $id)
-    {
+    protected function processGoogleDriveId(
+        InputInterface $input,
+        OutputInterface $output,
+        array $options,
+        string $id
+    ): bool {
         $googleAPIClient = $this->getAuthenticatedGoogleAPIClient($input, $output, $options);
         if ($googleAPIClient === null) {
             return false;
@@ -314,8 +318,15 @@ class PingDriveCommand extends Command
         } while ($pageToken);
     }
 
-    // @link https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/get
-    protected function writeGoogleSheetData (
+    /**
+     * Prints a URL ping result as if the result is a Google Sheets file
+     *
+     * @param OutputInterface $output
+     * @param \Google_Service_Sheets $service The Sheets API service
+     * @param \Google_Service_Drive_DriveFile $spreadsheet The file
+     * @link https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/get
+     */
+    protected function writeGoogleSheetData(
         OutputInterface $output,
         \Google_Service_Sheets $service,
         \Google_Service_Drive_DriveFile $spreadsheet
@@ -352,8 +363,11 @@ class PingDriveCommand extends Command
      * @param array $options Input options received from the parseInitialInput method
      * @return GoogleAPIClient|null If null, en error has happened (the message is printed)
      */
-    protected function getAuthenticatedGoogleAPIClient(InputInterface $input, OutputInterface $output, array $options)
-    {
+    protected function getAuthenticatedGoogleAPIClient(
+        InputInterface $input,
+        OutputInterface $output,
+        array $options
+    ): ?GoogleAPIClient {
         $googleAPIClient = $this->googleAPIFactory->make($this->makeConsoleLogger($output));
 
         try {
@@ -403,7 +417,7 @@ class PingDriveCommand extends Command
      *  - accessTokenFile (string|null)
      * @throws \RuntimeException If a configuration file can't be found, read or parsed
      */
-    protected function getDataFromConfigFile(OutputInterface $output)
+    protected function getDataFromConfigFile(OutputInterface $output): array
     {
         $configFilePath = $this->findConfigFile();
         $configFileDir = dirname($configFilePath);
@@ -443,7 +457,7 @@ class PingDriveCommand extends Command
      * @return string The file path
      * @throws \RuntimeException If a file can't be found or read
      */
-    protected function findConfigFile()
+    protected function findConfigFile(): string
     {
         $directory = getcwd();
         if ($directory === false) {
@@ -478,7 +492,7 @@ class PingDriveCommand extends Command
      * @param string $targetPath The relative path
      * @return string The full path
      */
-    protected function getFullPath($contextPath, $targetPath)
+    protected function getFullPath($contextPath, $targetPath): string
     {
         if ($this->filesystem->isAbsolutePath($targetPath)) {
             return $targetPath;
@@ -493,7 +507,7 @@ class PingDriveCommand extends Command
      * @param OutputInterface $output
      * @return ConsoleLogger
      */
-    protected function makeConsoleLogger(OutputInterface $output)
+    protected function makeConsoleLogger(OutputInterface $output): ConsoleLogger
     {
         return new ConsoleLogger($output, [
             LogLevel::DEBUG  => OutputInterface::VERBOSITY_VERY_VERBOSE,
@@ -512,7 +526,7 @@ class PingDriveCommand extends Command
      * @param OutputInterface $output
      * @param string $message The error message
      */
-    protected function writeError(OutputInterface $output, $message)
+    protected function writeError(OutputInterface $output, string $message)
     {
         if ($output instanceof ConsoleOutputInterface) {
             $output = $output->getErrorOutput();
@@ -522,7 +536,7 @@ class PingDriveCommand extends Command
     }
 
     /**
-     * Prints a Google Sheet as a table
+     * Prints a Google Sheet to a console output as a table
      *
      * @param OutputInterface $output
      * @param \Google_Service_Sheets_Sheet $sheet
