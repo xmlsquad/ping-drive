@@ -1,6 +1,6 @@
 <?php
 
-namespace Forikal\PingDrive\Commands;
+namespace Forikal\PingDrive\Command;
 
 use Forikal\Library\Console\ConsoleLogger;
 use Forikal\Library\GoogleAPI\GoogleAPIClient;
