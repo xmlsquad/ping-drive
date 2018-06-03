@@ -439,19 +439,13 @@ class PingDriveCommandTest extends TestCase
     public function testUserAuthentication()
     {
         $this->googleAPIFactoryMock->method('make')->willReturnCallback(function ($logger) {
-            $driveFilesMock = $this->createMock('Google_Service_Drive_Resource_Files');
-            $driveFilesMock->method('get')->willThrowException(new \Google_Service_Exception('Test', 404));
-
-            $driveServiceMock = $this->createMock('Google_Service_Drive');
-            $driveServiceMock->files = $driveFilesMock;
-
             $googleClientMock = $this->createMock('Google_Client');
             $googleClientMock->method('createAuthUrl')->willReturn('http://auth.please');
             $googleClientMock->method('fetchAccessTokenWithAuthCode')->with('auth-code')->willReturn(['token' => 'a-token']);
             $googleClientMock->method('isAccessTokenExpired')->willReturn(false);
 
             $googleAPIClientMock = new GoogleAPIClient($googleClientMock, $logger);
-            $googleAPIClientMock->driveService = $driveServiceMock;
+            $googleAPIClientMock->driveService = $this->mockGoogleDriveService();
 
             return $googleAPIClientMock;
         });
@@ -509,17 +503,11 @@ class PingDriveCommandTest extends TestCase
     public function testTokenAuthentication()
     {
         $this->googleAPIFactoryMock->method('make')->willReturnCallback(function ($logger) {
-            $driveFilesMock = $this->createMock('Google_Service_Drive_Resource_Files');
-            $driveFilesMock->method('get')->willThrowException(new \Google_Service_Exception('Test', 404));
-
-            $driveServiceMock = $this->createMock('Google_Service_Drive');
-            $driveServiceMock->files = $driveFilesMock;
-
             $googleClientMock = $this->createMock('Google_Client');
             $googleClientMock->method('isAccessTokenExpired')->willReturn(false);
 
             $googleAPIClientMock = new GoogleAPIClient($googleClientMock, $logger);
-            $googleAPIClientMock->driveService = $driveServiceMock;
+            $googleAPIClientMock->driveService = $this->mockGoogleDriveService();
 
             return $googleAPIClientMock;
         });
@@ -549,19 +537,13 @@ class PingDriveCommandTest extends TestCase
     public function testForceAuthentication()
     {
         $this->googleAPIFactoryMock->method('make')->willReturnCallback(function ($logger) {
-            $driveFilesMock = $this->createMock('Google_Service_Drive_Resource_Files');
-            $driveFilesMock->method('get')->willThrowException(new \Google_Service_Exception('Test', 404));
-
-            $driveServiceMock = $this->createMock('Google_Service_Drive');
-            $driveServiceMock->files = $driveFilesMock;
-
             $googleClientMock = $this->createMock('Google_Client');
             $googleClientMock->method('createAuthUrl')->willReturn('http://auth.please');
             $googleClientMock->method('fetchAccessTokenWithAuthCode')->willReturn(['token' => 'a-token']);
             $googleClientMock->method('isAccessTokenExpired')->willReturn(false);
 
             $googleAPIClientMock = new GoogleAPIClient($googleClientMock, $logger);
-            $googleAPIClientMock->driveService = $driveServiceMock;
+            $googleAPIClientMock->driveService = $this->mockGoogleDriveService();
 
             return $googleAPIClientMock;
         });
@@ -635,5 +617,21 @@ class PingDriveCommandTest extends TestCase
             ['subdir'],
             ['sub'.DIRECTORY_SEPARATOR.'sub'.DIRECTORY_SEPARATOR.'dir']
         ];
+    }
+
+    /**
+     * Creates a Google Drive service mock which always returns 404 error
+     *
+     * @return \Google_Service_Drive|\PHPUnit\Framework\MockObject\MockObject
+     */
+    protected function mockGoogleDriveService()
+    {
+        $driveFilesMock = $this->createMock('Google_Service_Drive_Resource_Files');
+        $driveFilesMock->method('get')->willThrowException(new \Google_Service_Exception('Test', 404));
+
+        $driveServiceMock = $this->createMock('Google_Service_Drive');
+        $driveServiceMock->files = $driveFilesMock;
+
+        return $driveServiceMock;
     }
 }

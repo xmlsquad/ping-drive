@@ -158,8 +158,8 @@ class PingDriveCommand extends Command
             }
 
             if ($options['clientSecretFile'] === null) {
-                if (($file = $dataFromConfigFile['clientSecretFile']) !== null) {
-                    $options['clientSecretFile'] = $file;
+                if (isset($dataFromConfigFile['clientSecretFile'])) {
+                    $options['clientSecretFile'] = $dataFromConfigFile['clientSecretFile'];
                 } else {
                     $this->writeError($output, 'The client secret file is specified neither in the CLI arguments nor in'
                         . ' the configuration file');
@@ -167,8 +167,8 @@ class PingDriveCommand extends Command
                 }
             }
 
-            if ($options['accessTokenFile'] === null && ($file = $dataFromConfigFile['accessTokenFile']) !== null) {
-                $options['accessTokenFile'] = $file;
+            if ($options['accessTokenFile'] === null && isset($dataFromConfigFile['accessTokenFile'])) {
+                $options['accessTokenFile'] = $dataFromConfigFile['accessTokenFile'];
             }
         }
 
@@ -409,14 +409,22 @@ class PingDriveCommand extends Command
      * Gets options values from a configuration file
      *
      * @param OutputInterface $output
-     * @return string[] Options values. The keys are:
-     *  - clientSecretFile (string)
+     * @return string[]|null Options values; null means that a configuration file wasn't found. The keys are:
+     *  - clientSecretFile (string|null)
      *  - accessTokenFile (string|null)
-     * @throws \RuntimeException If a configuration file can't be found, read or parsed
+     * @throws \RuntimeException If a configuration file can't be read or parsed
      */
-    protected function getDataFromConfigFile(OutputInterface $output): array
+    protected function getDataFromConfigFile(OutputInterface $output): ?array
     {
         $configFilePath = $this->findConfigFile();
+        if ($configFilePath === null) {
+            if ($output->isVerbose()) {
+                $output->writeln('A configuration file `'.static::CONFIG_FILE_NAME.'`'
+                    . ' exists neither in the current directory nor in any parent directory');
+            }
+            return null;
+        }
+
         $configFileDir = dirname($configFilePath);
         if ($output->isVerbose()) {
             $output->writeln('Reading options from the `' . $configFilePath . '` configuration file');
@@ -425,7 +433,7 @@ class PingDriveCommand extends Command
         try {
             $configData = Yaml\Yaml::parseFile($configFilePath);
         } catch (Yaml\Exception\ParseException $exception) {
-            throw new \RuntimeException('Couldn\'t parse The configuration file YAML');
+            throw new \RuntimeException('Couldn\'t parse the configuration file: '.$exception->getMessage());
         }
 
         $options = [];
@@ -433,12 +441,10 @@ class PingDriveCommand extends Command
         // Parsing paths
         foreach (array('clientSecretFile', 'accessTokenFile') as $option) {
             if (!isset($configData['google'][$option])) {
-                $options[$option] = null;
                 continue;
             }
             if (!is_string($path = $configData['google'][$option])) {
                 $this->writeError($output, 'The google.'.$option.' option value from the configuration file is not a string');
-                $options[$option] = null;
                 continue;
             }
 
@@ -451,10 +457,10 @@ class PingDriveCommand extends Command
     /**
      * Finds a configuration file within the current working directory and its parents
      *
-     * @return string The file path
-     * @throws \RuntimeException If a file can't be found or read
+     * @return string|null The file path. Null means that a file can't be found
+     * @throws \RuntimeException
      */
-    protected function findConfigFile(): string
+    protected function findConfigFile(): ?string
     {
         $directory = getcwd();
         if ($directory === false) {
@@ -466,10 +472,6 @@ class PingDriveCommand extends Command
             $file = $directory.DIRECTORY_SEPARATOR.static::CONFIG_FILE_NAME;
 
             if (is_file($file)) {
-                if (!is_readable($file)) {
-                    throw new \RuntimeException('The `'.$file.'` configuration file is not readable');
-                }
-
                 return $file;
             }
 
@@ -478,8 +480,7 @@ class PingDriveCommand extends Command
             $directory = $parentDirectory;
         }
 
-        throw new \RuntimeException('The `'.static::CONFIG_FILE_NAME.'` exists neither in the current directory nor in'
-            . ' any parent directory');
+        return null;
     }
 
     /**
