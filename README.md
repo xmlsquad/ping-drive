@@ -28,7 +28,7 @@ The following installation and usage instructions assume that you have created a
 ## Installation
 
 
-### As a standalone project
+### Installing as a standalone project
 
 Open a terminal and run:
 
@@ -53,7 +53,7 @@ php <directoryName>/bin/ping-drive ...
 
 Where `...` are the options and arguments described in the *Usage* section below.
 
-### As a project dependency
+### Installing as a project dependency
 
 Open a terminal, go to the project root directory and run:
 
