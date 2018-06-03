@@ -76,7 +76,7 @@ To use it, run the command and follow its instructions.
 ### The command signature:
 
 ```bash
-ping-drive URL -v --client-secret-file=CLIENT-SECRET-FILE --access-token-file=ACCESS-TOKEN-FILE --force-authenticate -q
+ping-drive -v --client-secret-file=CLIENT-SECRET-FILE --access-token-file=ACCESS-TOKEN-FILE --force-authenticate -q URL
 ```
 
 * `URL` specifies a URL to ping. This argument is required.
@@ -101,7 +101,7 @@ The command prints the URL information:
 ### Usage example:
 
 ```bash
-php vendor/bin/ping-drive https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCQXhLZFNLT2JyV0U -v
+php vendor/bin/ping-drive -v https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCQXhLZFNLT2JyV0U
 # Prints the folder content
 ```
 
