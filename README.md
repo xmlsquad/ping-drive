@@ -33,19 +33,25 @@ The following installation and usage instructions assume that you have created a
 Open a terminal and run:
 
 ```bash
+# Using composer's create-project command
 composer create-project forikal-uk/ping-drive <directoryName>
+```
 
-# or 
+or
 
+```bash
+# Cloning the git project 
 git clone https://github.com/forikal-uk/ping-drive.git <directoryName>
 composer install -d <directoryName>
 ```
 
-Replace `<directoryName>` with a path to a directory where the command must be installed. In this case the command is started by running:
+Where `<directoryName>` is the directory where the command must be installed. In this case the command is started by running:
 
 ```bash
 php <directoryName>/bin/ping-drive ...
 ```
+
+Where `...` are the options and arguments described in the *Usage* section below.
 
 ### As a project dependency
 
