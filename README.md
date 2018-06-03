@@ -12,8 +12,21 @@ This simple command should be used to test our connection and access to a specif
 
 * PHP ≥7.1
 * [Composer](http://getcomposer.org) (required for installation)
+* Google API Key 
+
+### How to get a Google API client secret file
+
+The following installation and usage instructions assume that you have created an O Auth Google API key and stored it locally on your workstation.
+
+1. Open [Google API console](http://console.developers.google.com).
+2. Create a project or select an existing project.
+3. Enable the following APIs in the project: [Drive](https://console.developers.google.com/apis/api/drive.googleapis.com) and [Sheets](https://console.developers.google.com/apis/api/sheets.googleapis.com).
+4. Go to the "Credentials" section, "Credentials" tab and [create an "OAuth client ID" credential](https://console.developers.google.com/apis/credentials/oauthclient). Or use an existing OAuth credential.
+5. Click the download button (⬇️) at the right of the "OAuth 2.0 client IDs" list.
+
 
 ## Installation
+
 
 ### As a standalone project
 
@@ -88,13 +101,7 @@ So the command can be used in complex bash scripts, for example:
 if [[ ping-drive -q ... ]]; then echo "Success!"; else echo "Fail"; fi
 ```
 
-### How to get a Google API client secret file
 
-1. Open [Google API console](http://console.developers.google.com).
-2. Create a project or select an existing project.
-3. Enable the following APIs in the project: [Drive](https://console.developers.google.com/apis/api/drive.googleapis.com) and [Sheets](https://console.developers.google.com/apis/api/sheets.googleapis.com).
-4. Go to the "Credentials" section, "Credentials" tab and [create an "OAuth client ID" credential](https://console.developers.google.com/apis/credentials/oauthclient). Or use an existing OAuth credential.
-5. Click the download button (⬇️) at the right of the "OAuth 2.0 client IDs" list.
 
 ### Using with configuration file
 
