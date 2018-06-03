@@ -416,7 +416,7 @@ class PingDriveCommand extends Command
      */
     protected function getDataFromConfigFile(OutputInterface $output): ?array
     {
-        $configFilePath = $this->findConfigFile();
+        $configFilePath = $this->findConfigFile($output);
         if ($configFilePath === null) {
             if ($output->isVerbose()) {
                 $output->writeln('A configuration file `'.static::CONFIG_FILE_NAME.'`'
@@ -457,25 +457,35 @@ class PingDriveCommand extends Command
     /**
      * Finds a configuration file within the current working directory and its parents
      *
+     * @param OutputInterface $output An output to print status
      * @return string|null The file path. Null means that a file can't be found
      * @throws \RuntimeException
      */
-    protected function findConfigFile(): ?string
+    protected function findConfigFile(OutputInterface $output): ?string
     {
-        $directory = getcwd();
+        $directory = @getcwd();
         if ($directory === false) {
-            throw new \RuntimeException('Can\'t get the working directory path.'
-                . ' Make sure the working directory is readable.');
+            throw new \RuntimeException('Can\'t get the working directory path. Make sure the working directory is readable.');
         }
 
         for ($i = 0; $i < 10000; ++$i) { // `for` protects from an infinite loop
             $file = $directory.DIRECTORY_SEPARATOR.static::CONFIG_FILE_NAME;
 
-            if (is_file($file)) {
+            if (@is_file($file)) {
                 return $file;
             }
 
-            $parentDirectory = realpath($directory.DIRECTORY_SEPARATOR.'..'); // Gets the parent directory path
+            $parentDirectory = @realpath($directory.DIRECTORY_SEPARATOR.'..'); // Gets the parent directory path
+
+            // Check whether the parent directory is restricted
+            if ($parentDirectory === false) {
+                if ($output->isVerbose()) {
+                    $output->writeln('The parent directory of `'.$directory.'` is restricted (maybe by open_basedir)'
+                        . ', so the search of a configuration file can\'t be proceeded');
+                }
+                break;
+            }
+
             if ($parentDirectory === $directory) break; // Check whether the current directory is a root directory
             $directory = $parentDirectory;
         }
