@@ -104,6 +104,13 @@ In this case you don't need to set this options while starting the command.
 The configuration file must be named `scapesettings.yaml` and located in the directory where the command is run or in one of the parent directories.
 [scapesettings.yaml.dist](scapesettings.yaml.dist) is an example of the configuration file with required parameters.
 
+### Troubleshooting
+
+If you have an error message starting with `Failed to authenticate to Google:` and the rest of the message doesn't give much information, do the following:
+
+1. Try to authenticate from scratch by running the command with the `--force-authenticate` option.
+2. If it doesn't help, create a Google API client secret file again and make sure the command uses the new file. You can see what secret file is used by running the command with the `-v` option.
+
 ## Contribution
 
 1. Clone the repository.

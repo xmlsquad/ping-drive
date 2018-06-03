@@ -7,7 +7,6 @@ use Forikal\Library\GoogleAPI\GoogleAPIClient;
 use Forikal\Library\GoogleAPI\GoogleAPIFactory;
 use Psr\Log\LogLevel;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableCell;
 use Symfony\Component\Console\Input\InputArgument;
@@ -15,7 +14,6 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Yaml;
 
@@ -69,8 +67,8 @@ class PingDriveCommand extends Command
             ->addArgument('url', InputArgument::REQUIRED, 'The target item URL')
 
             ->addOption('client-secret-file', null, InputOption::VALUE_REQUIRED, 'The path to an application client'
-                . ' secret file. If not specified, the command will try to get a path from a scapesettings.yaml file.'
-                . ' A client secret is required.')
+                . ' secret file. If not specified, the command will try to get a path from a '.static::CONFIG_FILE_NAME
+                . ' file. A client secret is required.')
 
             ->addOption('access-token-file', null, InputOption::VALUE_REQUIRED, 'The path to an access token file. The'
                 . ' file may not exists. If an access token file is used, the command remembers user credentials and'
@@ -85,8 +83,6 @@ class PingDriveCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $output->getFormatter()->setStyle('plain', new OutputFormatterStyle());
-
         $options = $this->parseInitialInput($input, $output);
         if ($options === null) {
             return 1;
@@ -100,11 +96,9 @@ class PingDriveCommand extends Command
                     $output->writeln('The URL points to Google Drive, will get more information from Google');
                 }
                 return $this->processGoogleDriveId($input, $output, $options, $urlData['id']) ? 0 : 1;
-
             case 'http':
                 $this->writeError($output, 'The URL does NOT point to a file or folder on Google Drive');
                 return 1;
-
             default:
                 $this->writeError($output, 'The given URL is not a URL');
                 return 1;
@@ -233,13 +227,23 @@ class PingDriveCommand extends Command
         array $options,
         string $id
     ): bool {
-        $googleAPIClient = $this->getAuthenticatedGoogleAPIClient($input, $output, $options);
-        if ($googleAPIClient === null) {
+        $googleAPIClient = $this->googleAPIFactory->make($this->makeConsoleLogger($output));
+
+        // Authenticate
+        if (!$googleAPIClient->authenticateFromCommand(
+            $input,
+            $output,
+            $options['clientSecretFile'],
+            $options['accessTokenFile'],
+            [\Google_Service_Drive::DRIVE_READONLY, \Google_Service_Sheets::SPREADSHEETS_READONLY],
+            $options['forceAuthenticate']
+        )) {
             return false;
         }
 
         $drive = $googleAPIClient->driveService;
 
+        // Try to get the file information
         try {
             $file = $drive->files->get($id);
         } catch (\Google_Service_Exception $exception) {
@@ -256,6 +260,7 @@ class PingDriveCommand extends Command
             return false;
         }
 
+        // Print the file information
         switch ($file->getMimeType()) {
             case GoogleAPIClient::MIME_TYPE_DRIVE_FOLDER:
                 $this->writeGoogleDriveFolderData($output, $drive, $file);
@@ -350,59 +355,6 @@ class PingDriveCommand extends Command
         $output->writeln('Sheets: '.implode(', ', $sheetsNames));
         $output->writeln('A piece of the first sheet content:');
         $this->writeGoogleSheetTable($output, $spreadsheetData->getSheets()[0]);
-    }
-
-    /**
-     * Makes and authenticates a Google API client by interacting with the user
-     *
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     * @param array $options Input options received from the parseInitialInput method
-     * @return GoogleAPIClient|null If null, en error has happened (the message is printed)
-     */
-    protected function getAuthenticatedGoogleAPIClient(
-        InputInterface $input,
-        OutputInterface $output,
-        array $options
-    ): ?GoogleAPIClient {
-        $googleAPIClient = $this->googleAPIFactory->make($this->makeConsoleLogger($output));
-
-        try {
-            $googleAPIClient->authenticate(
-                $options['clientSecretFile'],
-                $options['accessTokenFile'],
-                [
-                    \Google_Service_Drive::DRIVE_READONLY,
-                    \Google_Service_Sheets::SPREADSHEETS_READONLY
-                ],
-                function ($authURL) use ($input, $output) {
-                    $output->writeln('<info>You need to authenticate to your Google account to proceed</info>');
-                    $output->writeln('Open the following URL in a browser, get an auth code and paste it below:');
-                    $output->writeln('');
-                    $output->writeln($authURL, OutputInterface::OUTPUT_PLAIN);
-                    $output->writeln('');
-
-                    $helper = $this->getHelper('question');
-                    $question = new Question('Auth code: ');
-                    $question->setValidator(function ($answer) {
-                        $answer = trim($answer);
-
-                        if ($answer === '') {
-                            throw new \RuntimeException('Please enter an auth code');
-                        }
-
-                        return $answer;
-                    });
-                    return $helper->ask($input, $output, $question);
-                },
-                $options['forceAuthenticate']
-            );
-        } catch (\Exception $exception) {
-            $this->writeError($output, 'Failed to authenticate to Google: '.$exception->getMessage());
-            return null;
-        }
-
-        return $googleAPIClient;
     }
 
     /**
@@ -557,7 +509,7 @@ class PingDriveCommand extends Command
 
         foreach ($sheet->getData()[0]->getRowData() as $rowIndex => $sheetRow) {
             /** @var \Google_Service_Sheets_RowData $sheetRow */
-            // TableSeparator is not used here because rowspans break when it is used
+            // TableSeparator is not used here because it is not compatible with rowspan
 
             $tableRow = [];
 

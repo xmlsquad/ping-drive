@@ -14,6 +14,8 @@ use Symfony\Component\Filesystem\Filesystem;
 /**
  * Tests the command by mocking the Google API.
  *
+ * The rest of authentication is already tested in the library repository.
+ *
  * @link http://symfony.com/doc/current/console.html#testing-commands
  * @link http://symfony.com/doc/current/components/console/helpers/questionhelper.html#testing-a-command-that-expects-input
  */
@@ -147,7 +149,7 @@ class PingDriveCommandTest extends TestCase
         $driveServiceMock->files = $driveFilesMock;
 
         $googleAPIClientMock = $this->createMock(GoogleAPIClient::class);
-        $googleAPIClientMock->method('authenticate');
+        $googleAPIClientMock->method('authenticateFromCommand')->willReturn(true);
         $googleAPIClientMock->driveService = $driveServiceMock;
 
         $this->googleAPIFactoryMock->method('make')->willReturn($googleAPIClientMock);
@@ -227,7 +229,7 @@ class PingDriveCommandTest extends TestCase
         $sheetsServiceMock->spreadsheets = $sheetsSpreadsheetsMock;
 
         $googleAPIClientMock = $this->createMock(GoogleAPIClient::class);
-        $googleAPIClientMock->method('authenticate');
+        $googleAPIClientMock->method('authenticateFromCommand')->willReturn(true);
         $googleAPIClientMock->driveService = $driveServiceMock;
         $googleAPIClientMock->sheetsService = $sheetsServiceMock;
 
@@ -290,7 +292,7 @@ class PingDriveCommandTest extends TestCase
         $driveServiceMock->files = $driveFilesMock;
 
         $googleAPIClientMock = $this->createMock(GoogleAPIClient::class);
-        $googleAPIClientMock->method('authenticate');
+        $googleAPIClientMock->method('authenticateFromCommand')->willReturn(true);
         $googleAPIClientMock->driveService = $driveServiceMock;
 
         $this->googleAPIFactoryMock->method('make')->willReturn($googleAPIClientMock);
@@ -336,7 +338,7 @@ class PingDriveCommandTest extends TestCase
         $driveServiceMock->files = $driveFilesMock;
 
         $googleAPIClientMock = $this->createMock(GoogleAPIClient::class);
-        $googleAPIClientMock->method('authenticate');
+        $googleAPIClientMock->method('authenticateFromCommand')->willReturn(true);
         $googleAPIClientMock->driveService = $driveServiceMock;
 
         $this->googleAPIFactoryMock->method('make')->willReturn($googleAPIClientMock);
@@ -376,7 +378,7 @@ class PingDriveCommandTest extends TestCase
         $driveServiceMock->files = $driveFilesMock;
 
         $googleAPIClientMock = $this->createMock(GoogleAPIClient::class);
-        $googleAPIClientMock->method('authenticate');
+        $googleAPIClientMock->method('authenticateFromCommand')->willReturn(true);
         $googleAPIClientMock->driveService = $driveServiceMock;
 
         $this->googleAPIFactoryMock->method('make')->willReturn($googleAPIClientMock);
@@ -442,6 +444,7 @@ class PingDriveCommandTest extends TestCase
             $googleClientMock = $this->createMock('Google_Client');
             $googleClientMock->method('createAuthUrl')->willReturn('http://auth.please');
             $googleClientMock->method('fetchAccessTokenWithAuthCode')->with('auth-code')->willReturn(['token' => 'a-token']);
+            $googleClientMock->method('getAccessToken')->willReturn(['token' => 'a-token']);
             $googleClientMock->method('isAccessTokenExpired')->willReturn(false);
 
             $googleAPIClientMock = new GoogleAPIClient($googleClientMock, $logger);
@@ -473,65 +476,6 @@ class PingDriveCommandTest extends TestCase
     }
 
     /**
-     * Checks the command output when the user authentication fails
-     */
-    public function testFailUserAuthentication()
-    {
-        $this->googleAPIFactoryMock->method('make')->willReturnCallback(function ($logger) {
-            $googleClientMock = $this->createMock('Google_Client');
-            $googleClientMock->method('createAuthUrl')->willReturn('http://auth.please');
-            $googleClientMock->method('fetchAccessTokenWithAuthCode')->willReturn(['error' => 'test', 'error_description' => 'Just a test']);
-
-            return new GoogleAPIClient($googleClientMock, $logger);
-        });
-
-        $commandTester = new CommandTester($this->command);
-        $commandTester->setInputs(['auth-code']);
-        $commandTester->execute([
-            'url' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ',
-            '--client-secret-file' => $this->secretPath,
-            '--access-token-file' => $this->tokenPath
-        ]);
-        $output = $commandTester->getDisplay();
-        $this->assertContains('Failed to authenticate to Google: Google has declined the auth code: Just a test', $output);
-        $this->assertNotEquals(0, $commandTester->getStatusCode());
-    }
-
-    /**
-     * Checks that the user authentication is not required when there is an access token
-     */
-    public function testTokenAuthentication()
-    {
-        $this->googleAPIFactoryMock->method('make')->willReturnCallback(function ($logger) {
-            $googleClientMock = $this->createMock('Google_Client');
-            $googleClientMock->method('isAccessTokenExpired')->willReturn(false);
-
-            $googleAPIClientMock = new GoogleAPIClient($googleClientMock, $logger);
-            $googleAPIClientMock->driveService = $this->mockGoogleDriveService();
-
-            return $googleAPIClientMock;
-        });
-
-        file_put_contents($this->tokenPath, '{"token": "token123"}');
-
-        $commandTester = new CommandTester($this->command);
-        $commandTester->execute([
-            'url' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ',
-            '--client-secret-file' => $this->secretPath,
-            '--access-token-file' => $this->tokenPath
-        ], [
-            'verbosity' => OutputInterface::VERBOSITY_VERBOSE
-        ]);
-        $output = $commandTester->getDisplay();
-        $this->assertNotContains('Reading options from', $output);
-        $this->assertContains('The URL points to Google Drive, will get more information from Google', $output);
-        $this->assertContains('Getting the Google API client secret from the `'.$this->secretPath.'` file', $output);
-        $this->assertContains('Getting the last Google API access token from the `'.$this->tokenPath.'` file', $output);
-        $this->assertNotContains('You need to authenticate to your Google account to proceed', $output);
-        $this->assertContains('The Google authentication is completed', $output);
-    }
-
-    /**
      * Checks that the --force-authenticate argument works
      */
     public function testForceAuthentication()
@@ -540,6 +484,7 @@ class PingDriveCommandTest extends TestCase
             $googleClientMock = $this->createMock('Google_Client');
             $googleClientMock->method('createAuthUrl')->willReturn('http://auth.please');
             $googleClientMock->method('fetchAccessTokenWithAuthCode')->willReturn(['token' => 'a-token']);
+            $googleClientMock->method('getAccessToken')->willReturn(['token' => 'a-token']);
             $googleClientMock->method('isAccessTokenExpired')->willReturn(false);
 
             $googleAPIClientMock = new GoogleAPIClient($googleClientMock, $logger);
