@@ -96,7 +96,7 @@ The command prints the URL information:
 * If it is [an inaccessible Google Drive file](https://docs.google.com/spreadsheets/d/12j2CrvWbZUU2_OJiIIr-sRkut2N-Gid4uwA0ZpkVks0/edit?usp=sharing), prints the corresponding message. 
 * Otherwise prints an error message.
 
-([See exmaples with screenshots](https://github.com/forikal-uk/ping-drive/issues/1#issuecomment-394171911))
+([See examples of each type with screenshots and the expected output from the command line](https://github.com/forikal-uk/ping-drive/issues/1#issuecomment-394171911))
 
 ### Usage example:
 
