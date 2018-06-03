@@ -87,10 +87,10 @@ ping-drive URL -v --client-secret-file=CLIENT-SECRET-FILE --access-token-file=AC
 
 The command prints the URL information:
 
-* If it is a Google Folder, lists the contents of the folder.
-* If it is a Google Sheet, prints the name of the Sheet and some of the contents of the sheet.
-* If it is another type of file hosted on Google Drive, prints the name and type of the file.
-* If it is an inaccessible Google Drive file, prints the corresponding message. 
+* If it is [a Google Folder](https://drive.google.com/drive/folders/1ffBMTmpMZrqTGzq4e8vwdey40rupjfyz?usp=sharing), lists the contents of the folder.
+* If it is [a Google Sheet](https://docs.google.com/spreadsheets/d/1hdKksm6Xj6SiL3r8paCzlW2gBMRnm445ZBflUL-591M/edit?usp=sharing), prints the name of the Sheet and some of the contents of the sheet.
+* If it is [another type of file hosted on Google Drive](https://drive.google.com/file/d/1jfmnrKM49-Wq5v6JLQHB3nEizz0RyUYu/view?usp=sharing), prints the name and type of the file.
+* If it is [an inaccessible Google Drive file](https://docs.google.com/spreadsheets/d/12j2CrvWbZUU2_OJiIIr-sRkut2N-Gid4uwA0ZpkVks0/edit?usp=sharing), prints the corresponding message. 
 * Otherwise prints an error message.
 
 Usage example:
