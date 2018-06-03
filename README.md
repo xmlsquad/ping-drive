@@ -48,10 +48,10 @@ composer install -d <directoryName>
 Where `<directoryName>` is the directory where the command must be installed. In this case the command is started by running:
 
 ```bash
-php <directoryName>/bin/ping-drive ...
+php <directoryName>/bin/ping-drive  --help
 ```
 
-Where `...` are the options and arguments described in the *Usage* section below.
+Further options and arguments are described in the *Usage* section below.
 
 ### Installing as a project dependency
 
@@ -64,7 +64,7 @@ composer require forikal-uk/ping-drive
 In this case the command is started by running:
 
 ```bash
-php vendor/bin/ping-drive ...
+php vendor/bin/ping-drive  --help
 ```
 
 ## Usage
