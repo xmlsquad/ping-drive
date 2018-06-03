@@ -95,7 +95,7 @@ The command prints the URL information:
 * If it is [an inaccessible Google Drive file](https://docs.google.com/spreadsheets/d/12j2CrvWbZUU2_OJiIIr-sRkut2N-Gid4uwA0ZpkVks0/edit?usp=sharing), prints the corresponding message. 
 * Otherwise prints an error message.
 
-Usage example:
+### Usage example:
 
 ```bash
 php vendor/bin/ping-drive https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCQXhLZFNLT2JyV0U -v
