@@ -31,7 +31,7 @@ composer install -d <directoryName>
 Replace `<directoryName>` with a path to a directory where the command must be installed. In this case the command is started by running:
 
 ```bash
-php <directoryName>/ping-drive ...
+php <directoryName>/bin/ping-drive ...
 ```
 
 ### As a project dependency
