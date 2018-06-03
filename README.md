@@ -69,8 +69,9 @@ php vendor/bin/ping-drive  --help
 
 ## Usage
 
-The command operates behalf a Google user so you will need to authenticate during the first run. 
-To do it, run the command and follow its instructions.
+The command operates on behalf a Google user. So, you will need to authenticate during, at least, the first run. I say, 'at least' because, if `--access-token-file` is provided, the authentication token can be stored for the following invocations.
+
+To use it, run the command and follow its instructions.
 
 ### The command signature:
 
