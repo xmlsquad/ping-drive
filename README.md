@@ -72,7 +72,7 @@ php vendor/bin/ping-drive  --help
 The command operates behalf a Google user so you will need to authenticate during the first run. 
 To do it, run the command and follow its instructions.
 
-## The command signature:
+### The command signature:
 
 ```bash
 ping-drive URL -v --client-secret-file=CLIENT-SECRET-FILE --access-token-file=ACCESS-TOKEN-FILE --force-authenticate -q
@@ -85,7 +85,7 @@ ping-drive URL -v --client-secret-file=CLIENT-SECRET-FILE --access-token-file=AC
 * `--force-authenticate` makes the command prompt for Google authentication even if an access token is presented. You can use it when you face an authorization problem or need to authenticate to another account.
 * `-q` or `--quiet` makes the command print nothing.
 
-## Behaviours
+### Behaviours
 
 The command prints the URL information:
 
