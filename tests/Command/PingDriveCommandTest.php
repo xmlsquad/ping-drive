@@ -203,11 +203,12 @@ class PingDriveCommandTest extends TestCase
         $driveServiceMock = $this->createMock('Google_Service_Drive');
         $driveServiceMock->files = $driveFilesMock;
 
-        $sheetsData = array_map(function ($name) {
+        $sheetsData1 = array_map(function ($name) {
             return ['properties' => ['title' => $name]];
         }, $sheets);
-        if ($sheetsData) {
-            $sheetsData[0]['data'] = [
+        $sheetsData2 = array_slice($sheetsData1, 0, 1);
+        if ($sheetsData2) {
+            $sheetsData2[0]['data'] = [
                 [
                     'rowData' => array_map(function ($row) {
                         return [
@@ -218,12 +219,20 @@ class PingDriveCommandTest extends TestCase
                     }, $table)
                 ]
             ];
-            $sheetsData[0]['merges'] = [];
+            $sheetsData2[0]['merges'] = [];
         }
-        $spreadsheet = new \Google_Service_Sheets_Spreadsheet(['sheets' => $sheetsData]);
 
         $sheetsSpreadsheetsMock = $this->createMock('Google_Service_Sheets_Resource_Spreadsheets');
-        $sheetsSpreadsheetsMock->method('get')->with($id, ['includeGridData' => true, 'ranges' => ['A1:E5']])->willReturn($spreadsheet);
+        $sheetsSpreadsheetsMock
+            ->method('get')
+            ->withConsecutive(
+                [$id, ['includeGridData' => false]],
+                [$id, ['includeGridData' => true, 'ranges' => ['A1:E5']]]
+            )
+            ->will($this->onConsecutiveCalls(
+                new \Google_Service_Sheets_Spreadsheet(['sheets' => $sheetsData1]),
+                new \Google_Service_Sheets_Spreadsheet(['sheets' => $sheetsData2])
+            ));
 
         $sheetsServiceMock = $this->createMock('Google_Service_Sheets');
         $sheetsServiceMock->spreadsheets = $sheetsSpreadsheetsMock;
@@ -244,15 +253,15 @@ class PingDriveCommandTest extends TestCase
         $output = $commandTester->getDisplay();
         $this->assertContains('The URL is a Google Sheets file', $output);
         $this->assertContains('Name: '.$name, $output);
-        if (!$sheets) {
-            $this->assertContains('The file has no sheets', $output);
-            return;
-        }
-        $this->assertContains('Sheets: '.implode(', ', $sheets), $output);
-        foreach ($table as $row) {
-            foreach ($row as $value) {
-                $this->assertContains((string)$value, $output);
+        if ($sheets) {
+            $this->assertContains('Sheets: '.implode(', ', $sheets), $output);
+            foreach ($table as $row) {
+                foreach ($row as $value) {
+                    $this->assertContains((string)$value, $output);
+                }
             }
+        } else {
+            $this->assertContains('The file has no sheets', $output);
         }
         $this->assertEquals(0, $commandTester->getStatusCode());
     }

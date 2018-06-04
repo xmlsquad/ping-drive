@@ -336,23 +336,27 @@ class PingDriveCommand extends Command
         $output->writeln('<info>The URL is a Google Sheets file</info>');
         $output->writeln('Name: '.$spreadsheet->getName());
 
+        // Getting the list of sheets
         $spreadsheetData = $service->spreadsheets->get($spreadsheet->getId(), [
-            'includeGridData' => true,
-            'ranges' => ['A1:E5']
+            'includeGridData' => false
         ]);
-
         $sheetsNames = [];
         foreach ($spreadsheetData->getSheets() as $sheet) {
             /** @var \Google_Service_Sheets_Sheet $sheet (the SDK type hint is incorrect) */
             $sheetsNames[] = $sheet->getProperties()->getTitle();
         }
-
-        if (!$sheetsNames) {
+        if ($sheetsNames) {
+            $output->writeln('Sheets: '.implode(', ', $sheetsNames));
+        } else {
             $output->writeln('The file has no sheets');
             return;
         }
 
-        $output->writeln('Sheets: '.implode(', ', $sheetsNames));
+        // Getting a piece of the first sheet content
+        $spreadsheetData = $service->spreadsheets->get($spreadsheet->getId(), [
+            'includeGridData' => true,
+            'ranges' => ['A1:E5'] // Google returns only the data of the first sheet for this request
+        ]);
         $output->writeln('A piece of the first sheet content:');
         $this->writeGoogleSheetTable($output, $spreadsheetData->getSheets()[0]);
     }
