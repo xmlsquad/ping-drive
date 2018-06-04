@@ -127,8 +127,8 @@ The configuration file must be named `scapesettings.yaml` and located in the dir
 If you have an error message starting with `Failed to authenticate to Google:` and the rest of the message doesn't give much information, do the following:
 
 1. Double check to ensure you followed the [API Key instructons](https://github.com/forikal-uk/ping-drive#how-to-get-a-google-api-client-secret-file) and are using the correct _type_ of key.
-1. Try to authenticate from scratch by running the command with the `--force-authenticate` option.
-1. If it doesn't help, create a Google API client secret file again and make sure the command uses the new file. You can see what secret file is used by running the command with the `-v` option.
+2. Try to authenticate from scratch by running the command with the `--force-authenticate` option.
+3. If it doesn't help, create a Google API client secret file again and make sure the command uses the new file. You can see what secret file is used by running the command with the `-v` option.
 
 ## Contribution
 
