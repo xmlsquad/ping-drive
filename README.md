@@ -4,7 +4,7 @@ Symfony Console command that reports its attempts at locating and reading the co
 
 Inspired by the terminal command of the same name: [ping](https://en.wikipedia.org/wiki/Ping_(networking_utility))
 
-Designed be used in the context of the Symfony Console application at https://github.com/forikal-uk/xml-authoring-tools which, in turn, is used in the context of a known directory structure which is based on [xml-authoring-project](https://github.com/forikal-uk/xml-authoring-project).
+Designed be used in the context of the Symfony Console application at https://github.com/xmlsquad/xml-authoring-tools which, in turn, is used in the context of a known directory structure which is based on [xml-authoring-project](https://github.com/xmlsquad/xml-authoring-project).
 
 This simple command should be used to test our connection and access to a specific Google Drive entity (file or folder). To that end it should do as little as possible other than provide feedback on its progress.
 
@@ -34,14 +34,14 @@ Open a terminal and run:
 
 ```bash
 # Using composer's create-project command
-composer create-project forikal-uk/ping-drive <directoryName>
+composer create-project xmlsquad/ping-drive <directoryName>
 ```
 
 or
 
 ```bash
 # Cloning the git project 
-git clone https://github.com/forikal-uk/ping-drive.git <directoryName>
+git clone https://github.com/xmlsquad/ping-drive.git <directoryName>
 composer install -d <directoryName>
 ```
 
@@ -58,7 +58,7 @@ Further options and arguments are described in the *Usage* section below.
 Open a terminal, go to the project root directory and run:
 
 ```bash
-composer require forikal-uk/ping-drive
+composer require xmlsquad/ping-drive
 ```
 
 In this case the command is started by running:
@@ -96,7 +96,7 @@ The command prints the URL information:
 * If it is [an inaccessible Google Drive file](https://docs.google.com/spreadsheets/d/12j2CrvWbZUU2_OJiIIr-sRkut2N-Gid4uwA0ZpkVks0/edit?usp=sharing), prints the corresponding message. 
 * Otherwise prints an error message.
 
-([See examples of each type with screenshots and the expected output from the command line](https://github.com/forikal-uk/ping-drive/issues/1#issuecomment-394171911))
+([See examples of each type with screenshots and the expected output from the command line](https://github.com/xmlsquad/ping-drive/issues/1#issuecomment-394171911))
 
 ### Usage example:
 
@@ -126,7 +126,7 @@ The configuration file must be named `scapesettings.yaml` and located in the dir
 
 If you have an error message starting with `Failed to authenticate to Google:` and the rest of the message doesn't give much information, do the following:
 
-1. Double check to ensure you followed the [API Key instructons](https://github.com/forikal-uk/ping-drive#how-to-get-a-google-api-client-secret-file) and are using the correct _type_ of key.
+1. Double check to ensure you followed the [API Key instructons](https://github.com/xmlsquad/ping-drive#how-to-get-a-google-api-client-secret-file) and are using the correct _type_ of key.
 2. Try to authenticate from scratch by running the command with the `--force-authenticate` option.
 3. If it doesn't help, create a Google API client secret file again and make sure the command uses the new file. You can see what secret file is used by running the command with the `-v` option.
 

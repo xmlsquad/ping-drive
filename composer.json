@@ -1,5 +1,5 @@
 {
-    "name": "forikal-uk/ping-drive",
+    "name": "xmlsquad/ping-drive",
     "description": "Symfony Console command that reports its attempts at locating and reading the contents of a Google Drive folder or file",
     "type": "library",
     "license": "Apache-2.0",
@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": ">=7.1",
-        "forikal-uk/xml-authoring-library": "dev-master",
+        "xmlsquad/xml-authoring-library": "dev-master",
         "symfony/console": "^3.4",
         "symfony/yaml": "^3.4",
         "symfony/filesystem": "^3.4",
@@ -22,12 +22,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Forikal\\PingDrive\\": "src/"
+            "XmlSquad\\PingDrive\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Forikal\\PingDrive\\Tests\\": "tests/"
+            "XmlSquad\\PingDrive\\Tests\\": "tests/"
         }
     },
     "bin": [

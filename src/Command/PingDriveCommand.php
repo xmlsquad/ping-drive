@@ -1,10 +1,10 @@
 <?php
 
-namespace Forikal\PingDrive\Command;
+namespace XmlSquad\PingDrive\Command;
 
-use Forikal\Library\Console\ConsoleLogger;
-use Forikal\Library\GoogleAPI\GoogleAPIClient;
-use Forikal\Library\GoogleAPI\GoogleAPIFactory;
+use XmlSquad\Library\Console\ConsoleLogger;
+use XmlSquad\Library\GoogleAPI\GoogleAPIClient;
+use XmlSquad\Library\GoogleAPI\GoogleAPIFactory;
 use Psr\Log\LogLevel;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;

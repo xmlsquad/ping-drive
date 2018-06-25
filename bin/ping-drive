@@ -10,7 +10,7 @@ foreach ([__DIR__.'/../../../autoload.php', __DIR__.'/../../vendor/autoload.php'
 
 $application = new \Symfony\Component\Console\Application('Ping Drive', '0.2.3');
 
-$application->add($defaultCommand = new \Forikal\PingDrive\Command\PingDriveCommand());
+$application->add($defaultCommand = new \XmlSquad\PingDrive\Command\PingDriveCommand());
 $application->setDefaultCommand($defaultCommand->getName(), true);
 
 $application->run();

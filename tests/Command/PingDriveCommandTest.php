@@ -1,10 +1,10 @@
 <?php
 
-namespace Forikal\PingDrive\Tests\Command;
+namespace XmlSquad\PingDrive\Tests\Command;
 
-use Forikal\Library\GoogleAPI\GoogleAPIClient;
-use Forikal\Library\GoogleAPI\GoogleAPIFactory;
-use Forikal\PingDrive\Command\PingDriveCommand;
+use XmlSquad\Library\GoogleAPI\GoogleAPIClient;
+use XmlSquad\Library\GoogleAPI\GoogleAPIFactory;
+use XmlSquad\PingDrive\Command\PingDriveCommand;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Output\OutputInterface;
