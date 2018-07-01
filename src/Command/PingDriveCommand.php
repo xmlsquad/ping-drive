@@ -2,6 +2,7 @@
 
 namespace XmlSquad\PingDrive\Command;
 
+use XmlSquad\Library\Command\AbstractCommand;
 use XmlSquad\Library\Console\ConsoleLogger;
 use XmlSquad\Library\GoogleAPI\GoogleAPIClient;
 use XmlSquad\Library\GoogleAPI\GoogleAPIFactory;
@@ -22,7 +23,7 @@ use Symfony\Component\Yaml;
  *
  * @author Surgie Finesse
  */
-class PingDriveCommand extends Command
+class PingDriveCommand extends AbstractCommand
 {
     /**
      * The name of fallback configuration file for a case when the API files paths are not specified in the input
