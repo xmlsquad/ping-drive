@@ -485,7 +485,7 @@ class PingDriveCommandTest extends TestCase
     }
 
     /**
-     * Checks that the --force-authenticate argument works
+     * Checks that the --forceAuthenticate argument works
      */
     public function testForceAuthentication()
     {
@@ -510,7 +510,7 @@ class PingDriveCommandTest extends TestCase
             'driveUrl' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ',
             '--gApiOAuthSecretFile' => $this->secretPath,
             '--gApiAccessTokenFile' => $this->tokenPath,
-            '--force-authenticate' => true
+            '--forceAuthenticate' => true
         ], [
             'verbosity' => OutputInterface::VERBOSITY_VERBOSE
         ]);

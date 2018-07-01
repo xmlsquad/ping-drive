@@ -76,14 +76,14 @@ To use it, run the command and follow its instructions.
 ### The command signature:
 
 ```bash
-ping-drive -v --gApiOAuthSecretFile=GAPIOAUTHSECRETFILE --gApiAccessTokenFile=ACCESS-TOKEN-FILE --force-authenticate -q URL
+ping-drive -v --gApiOAuthSecretFile=GAPIOAUTHSECRETFILE --gApiAccessTokenFile=ACCESS-TOKEN-FILE --forceAuthenticate -q URL
 ```
 
 * `URL` specifies a URL to ping. This argument is required.
 * `-v` or `--verbose` turns the verbose mode on. In this mode a detailed progress information is printed. Otherwise only the key information is printed.
 * `--gApiOAuthSecretFile` specifies a path to a JSON file with a Google API client secret. See below how to get it.
 * `--gApiAccessTokenFile` specifies a path to a JSON file with a Google API access token. Access token file is optional. If a file path is set, the access token will be saved and subsequent executions will not prompt for authorization. If the given file doesn't exist, it will be created.
-* `--force-authenticate` makes the command prompt for Google authentication even if an access token is presented. You can use it when you face an authorization problem or need to authenticate to another account.
+* `--forceAuthenticate` makes the command prompt for Google authentication even if an access token is presented. You can use it when you face an authorization problem or need to authenticate to another account.
 * `-q` or `--quiet` makes the command print nothing.
 
 ### Behaviours
@@ -127,7 +127,7 @@ The configuration file must be named `scapesettings.yaml` and located in the dir
 If you have an error message starting with `Failed to authenticate to Google:` and the rest of the message doesn't give much information, do the following:
 
 1. Double check to ensure you followed the [API Key instructons](https://github.com/xmlsquad/ping-drive#how-to-get-a-google-api-client-secret-file) and are using the correct _type_ of key.
-2. Try to authenticate from scratch by running the command with the `--force-authenticate` option.
+2. Try to authenticate from scratch by running the command with the `--forceAuthenticate` option.
 3. If it doesn't help, create a Google API client secret file again and make sure the command uses the new file. You can see what secret file is used by running the command with the `-v` option.
 
 ## Contribution

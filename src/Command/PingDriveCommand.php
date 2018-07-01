@@ -75,7 +75,7 @@ class PingDriveCommand extends AbstractCommand
                 . ' file may not exists. If an access token file is used, the command remembers user credentials and'
                 . ' doesn\'t require a Google authentication next time.')
 
-            ->addOption('force-authenticate', null, InputOption::VALUE_NONE, 'If set, you will be asked to authenticate'
+            ->addOption('forceAuthenticate', null, InputOption::VALUE_NONE, 'If set, you will be asked to authenticate'
                 . ' even if an access token exist.');
     }
 
@@ -122,7 +122,7 @@ class PingDriveCommand extends AbstractCommand
     {
         $options = [
             'driveUrl' => $this->getDriveUrlArgument($input),
-            'forceAuthenticate' => (bool)$input->getOption('force-authenticate')
+            'forceAuthenticate' => (bool)$input->getOption('forceAuthenticate')
         ];
 
         $needToParseConfigFile = false;
