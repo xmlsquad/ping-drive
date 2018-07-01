@@ -65,7 +65,7 @@ class PingDriveCommand extends AbstractCommand
             ->setDescription('Pings a Google Drive folder, Google Docs, Google Sheets or Google Slides URL')
             ->setHelp('See the readme')
 
-            ->addArgument('drive-url', InputArgument::REQUIRED, 'The target item URL')
+            ->doConfigureDriveUrlArgument('The target item URL')
 
             ->addOption('client-secret-file', null, InputOption::VALUE_REQUIRED, 'The path to an application client'
                 . ' secret file. If not specified, the command will try to get a path from a '.static::CONFIG_FILE_NAME
@@ -121,7 +121,7 @@ class PingDriveCommand extends AbstractCommand
     protected function parseInitialInput(InputInterface $input, OutputInterface $output): ?array
     {
         $options = [
-            'drive-url' => $input->getArgument('drive-url'),
+            'drive-url' => $this->getDriveUrlArgument($input),
             'forceAuthenticate' => (bool)$input->getOption('force-authenticate')
         ];
 
@@ -168,17 +168,6 @@ class PingDriveCommand extends AbstractCommand
         }
 
         return $options;
-    }
-
-
-    /**
-     * Get DataSourceOption [drive-url]
-     *
-     * @param InputInterface $input
-     * @return mixed
-     */
-    protected function getDriveUrlOption(InputInterface $input){
-        return $input->getArgument('drive-url');
     }
 
 
