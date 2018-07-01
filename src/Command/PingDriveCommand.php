@@ -66,7 +66,7 @@ class PingDriveCommand extends AbstractCommand
             ->setHelp('See the readme')
 
             ->doConfigureDriveUrlArgument('The target item URL')
-            ->doConfigureGApiSecretFileOption(
+            ->doConfigureGApiOAuthSecretFileOption(
                 InputOption::VALUE_OPTIONAL, 'The path to an application client'
                 . ' secret file. If not specified, the command will try to get a path from a '.static::CONFIG_FILE_NAME
                 . ' file. A client secret is required.')
@@ -115,7 +115,7 @@ class PingDriveCommand extends AbstractCommand
      *    the following keys:
      *     - drive-url (string)
      *     - forceAuthenticate (bool)
-     *     - clientSecretFile (string)
+     *     - gApiOAuthSecretFile (string)
      *     - accessTokenFile (string|null)
      */
     protected function parseInitialInput(InputInterface $input, OutputInterface $output): ?array
@@ -127,8 +127,8 @@ class PingDriveCommand extends AbstractCommand
 
         $needToParseConfigFile = false;
 
-        $options['clientSecretFile'] = $this->doGetGApiSecretFileOption($input);
-        if ($options['clientSecretFile'] === null) {
+        $options['gApiOAuthSecretFile'] = $this->doGetGApiOAuthSecretFileOption($input);
+        if ($options['gApiOAuthSecretFile'] === null) {
             $needToParseConfigFile = true;
             if ($output->isVerbose()) {
                 $output->writeln('The client secret file path is not specified, will try to get the path from a configuration file');
@@ -152,9 +152,9 @@ class PingDriveCommand extends AbstractCommand
                 return null;
             }
 
-            if ($options['clientSecretFile'] === null) {
-                if (isset($dataFromConfigFile['clientSecretFile'])) {
-                    $options['clientSecretFile'] = $dataFromConfigFile['clientSecretFile'];
+            if ($options['gApiOAuthSecretFile'] === null) {
+                if (isset($dataFromConfigFile['gApiOAuthSecretFile'])) {
+                    $options['gApiOAuthSecretFile'] = $dataFromConfigFile['gApiOAuthSecretFile'];
                 } else {
                     $this->writeError($output, 'The client secret file is specified neither in the CLI arguments nor in'
                         . ' the configuration file');
@@ -235,7 +235,7 @@ class PingDriveCommand extends AbstractCommand
         if (!$googleAPIClient->authenticateFromCommand(
             $input,
             $output,
-            $options['clientSecretFile'],
+            $options['gApiOAuthSecretFile'],
             $options['accessTokenFile'],
             [\Google_Service_Drive::DRIVE_READONLY, \Google_Service_Sheets::SPREADSHEETS_READONLY],
             $options['forceAuthenticate']
@@ -368,7 +368,7 @@ class PingDriveCommand extends AbstractCommand
      *
      * @param OutputInterface $output
      * @return string[]|null Options values; null means that a configuration file wasn't found. The keys are:
-     *  - clientSecretFile (string|null)
+     *  - gApiOAuthSecretFile (string|null)
      *  - accessTokenFile (string|null)
      * @throws \RuntimeException If a configuration file can't be read or parsed
      */
@@ -397,7 +397,7 @@ class PingDriveCommand extends AbstractCommand
         $options = [];
 
         // Parsing paths
-        foreach (array('clientSecretFile', 'accessTokenFile') as $option) {
+        foreach (array('gApiOAuthSecretFile', 'accessTokenFile') as $option) {
             if (!isset($configData['google'][$option])) {
                 continue;
             }

@@ -76,12 +76,12 @@ To use it, run the command and follow its instructions.
 ### The command signature:
 
 ```bash
-ping-drive -v --client-secret-file=CLIENT-SECRET-FILE --access-token-file=ACCESS-TOKEN-FILE --force-authenticate -q URL
+ping-drive -v --gApiOAuthSecretFile=GAPIOAUTHSECRETFILE --access-token-file=ACCESS-TOKEN-FILE --force-authenticate -q URL
 ```
 
 * `URL` specifies a URL to ping. This argument is required.
 * `-v` or `--verbose` turns the verbose mode on. In this mode a detailed progress information is printed. Otherwise only the key information is printed.
-* `--client-secret-file` specifies a path to a JSON file with a Google API client secret. See below how to get it.
+* `--gApiOAuthSecretFile` specifies a path to a JSON file with a Google API client secret. See below how to get it.
 * `--access-token-file` specifies a path to a JSON file with a Google API access token. Access token file is optional. If a file path is set, the access token will be saved and subsequent executions will not prompt for authorization. If the given file doesn't exist, it will be created.
 * `--force-authenticate` makes the command prompt for Google authentication even if an access token is presented. You can use it when you face an authorization problem or need to authenticate to another account.
 * `-q` or `--quiet` makes the command print nothing.
