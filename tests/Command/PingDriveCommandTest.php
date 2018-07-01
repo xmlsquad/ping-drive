@@ -158,7 +158,7 @@ class PingDriveCommandTest extends TestCase
         $commandTester->execute([
             'driveUrl' => $driveUrl,
             '--gApiOAuthSecretFile' => $this->secretPath,
-            '--access-token-file' => $this->tokenPath
+            '--gApiAccessTokenFile' => $this->tokenPath
         ]);
         $output = $commandTester->getDisplay(true);
         $this->assertContains('The URL is a Google Drive folder', $output);
@@ -248,7 +248,7 @@ class PingDriveCommandTest extends TestCase
         $commandTester->execute([
             'driveUrl' => $driveUrl,
             '--gApiOAuthSecretFile' => $this->secretPath,
-            '--access-token-file' => $this->tokenPath
+            '--gApiAccessTokenFile' => $this->tokenPath
         ]);
         $output = $commandTester->getDisplay();
         $this->assertContains('The URL is a Google Sheets file', $output);
@@ -310,7 +310,7 @@ class PingDriveCommandTest extends TestCase
         $commandTester->execute([
             'driveUrl' => $driveUrl,
             '--gApiOAuthSecretFile' => $this->secretPath,
-            '--access-token-file' => $this->tokenPath
+            '--gApiAccessTokenFile' => $this->tokenPath
         ]);
         $output = $commandTester->getDisplay();
         $this->assertContains('The URL is a Google Slides file', $output);
@@ -356,7 +356,7 @@ class PingDriveCommandTest extends TestCase
         $commandTester->execute([
             'driveUrl' => $driveUrl,
             '--gApiOAuthSecretFile' => $this->secretPath,
-            '--access-token-file' => $this->tokenPath
+            '--gApiAccessTokenFile' => $this->tokenPath
         ]);
         $output = $commandTester->getDisplay();
         $this->assertContains('The URL is a Google Drive file', $output);
@@ -396,7 +396,7 @@ class PingDriveCommandTest extends TestCase
         $commandTester->execute([
             'driveUrl' => $driveUrl,
             '--gApiOAuthSecretFile' => $this->secretPath,
-            '--access-token-file' => $this->tokenPath
+            '--gApiAccessTokenFile' => $this->tokenPath
         ]);
         $output = $commandTester->getDisplay();
         $this->assertContains($expectedMessage, $output);
@@ -425,7 +425,7 @@ class PingDriveCommandTest extends TestCase
         $commandTester->execute([
             'driveUrl' => $driveUrl,
             '--gApiOAuthSecretFile' => $this->secretPath,
-            '--access-token-file' => $this->tokenPath
+            '--gApiAccessTokenFile' => $this->tokenPath
         ]);
         $output = $commandTester->getDisplay();
         $this->assertContains($expectedMessage, $output);
@@ -467,7 +467,7 @@ class PingDriveCommandTest extends TestCase
         $commandTester->execute([
             'driveUrl' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ',
             '--gApiOAuthSecretFile' => $this->secretPath,
-            '--access-token-file' => $this->tokenPath
+            '--gApiAccessTokenFile' => $this->tokenPath
         ], [
             'verbosity' => OutputInterface::VERBOSITY_VERBOSE
         ]);
@@ -509,7 +509,7 @@ class PingDriveCommandTest extends TestCase
         $commandTester->execute([
             'driveUrl' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ',
             '--gApiOAuthSecretFile' => $this->secretPath,
-            '--access-token-file' => $this->tokenPath,
+            '--gApiAccessTokenFile' => $this->tokenPath,
             '--force-authenticate' => true
         ], [
             'verbosity' => OutputInterface::VERBOSITY_VERBOSE
@@ -533,7 +533,7 @@ class PingDriveCommandTest extends TestCase
         $tokenRelativePath = '.'.DIRECTORY_SEPARATOR.'relative-path.json';
         $tokenAbsolutePath = static::TEMP_DIR.DIRECTORY_SEPARATOR.$tokenRelativePath;
 
-        file_put_contents($configPath, 'google: {gApiOAuthSecretFile: "'.$secretPath.'", accessTokenFile: "'.$tokenRelativePath.'"}');
+        file_put_contents($configPath, 'google: {gApiOAuthSecretFile: "'.$secretPath.'", gApiAccessTokenFile: "'.$tokenRelativePath.'"}');
         file_put_contents($secretPath, '{"secret": "ok"}');
         file_put_contents($tokenAbsolutePath, '{"token": "ok"}');
 

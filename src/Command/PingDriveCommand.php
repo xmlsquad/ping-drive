@@ -71,7 +71,7 @@ class PingDriveCommand extends AbstractCommand
                 . ' secret file. If not specified, the command will try to get a path from a '.static::CONFIG_FILE_NAME
                 . ' file. A client secret is required.')
 
-            ->addOption('access-token-file', null, InputOption::VALUE_REQUIRED, 'The path to an access token file. The'
+            ->addOption('gApiAccessTokenFile', null, InputOption::VALUE_REQUIRED, 'The path to an access token file. The'
                 . ' file may not exists. If an access token file is used, the command remembers user credentials and'
                 . ' doesn\'t require a Google authentication next time.')
 
@@ -116,7 +116,7 @@ class PingDriveCommand extends AbstractCommand
      *     - driveUrl (string)
      *     - forceAuthenticate (bool)
      *     - gApiOAuthSecretFile (string)
-     *     - accessTokenFile (string|null)
+     *     - gApiAccessTokenFile (string|null)
      */
     protected function parseInitialInput(InputInterface $input, OutputInterface $output): ?array
     {
@@ -135,8 +135,8 @@ class PingDriveCommand extends AbstractCommand
             }
         }
 
-        $options['accessTokenFile'] = $input->getOption('access-token-file');
-        if ($options['accessTokenFile'] === null) {
+        $options['gApiAccessTokenFile'] = $input->getOption('gApiAccessTokenFile');
+        if ($options['gApiAccessTokenFile'] === null) {
             $needToParseConfigFile = true;
             if ($output->isVerbose()) {
                 $output->writeln('The access token file path is not specified, will try to get the path from a configuration file');
@@ -162,8 +162,8 @@ class PingDriveCommand extends AbstractCommand
                 }
             }
 
-            if ($options['accessTokenFile'] === null && isset($dataFromConfigFile['accessTokenFile'])) {
-                $options['accessTokenFile'] = $dataFromConfigFile['accessTokenFile'];
+            if ($options['gApiAccessTokenFile'] === null && isset($dataFromConfigFile['gApiAccessTokenFile'])) {
+                $options['gApiAccessTokenFile'] = $dataFromConfigFile['gApiAccessTokenFile'];
             }
         }
 
@@ -236,7 +236,7 @@ class PingDriveCommand extends AbstractCommand
             $input,
             $output,
             $options['gApiOAuthSecretFile'],
-            $options['accessTokenFile'],
+            $options['gApiAccessTokenFile'],
             [\Google_Service_Drive::DRIVE_READONLY, \Google_Service_Sheets::SPREADSHEETS_READONLY],
             $options['forceAuthenticate']
         )) {
@@ -369,7 +369,7 @@ class PingDriveCommand extends AbstractCommand
      * @param OutputInterface $output
      * @return string[]|null Options values; null means that a configuration file wasn't found. The keys are:
      *  - gApiOAuthSecretFile (string|null)
-     *  - accessTokenFile (string|null)
+     *  - gApiAccessTokenFile (string|null)
      * @throws \RuntimeException If a configuration file can't be read or parsed
      */
     protected function getDataFromConfigFile(OutputInterface $output): ?array
@@ -397,7 +397,7 @@ class PingDriveCommand extends AbstractCommand
         $options = [];
 
         // Parsing paths
-        foreach (array('gApiOAuthSecretFile', 'accessTokenFile') as $option) {
+        foreach (array('gApiOAuthSecretFile', 'gApiAccessTokenFile') as $option) {
             if (!isset($configData['google'][$option])) {
                 continue;
             }

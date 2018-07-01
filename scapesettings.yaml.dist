@@ -1,4 +1,4 @@
 # The file can have any other parameters
 google:
     gApiOAuthSecretFile: google-client-secret.json # The path to an application client secret file (relative to this file)
-    accessTokenFile: google-access-token.json   # The path to an access token file (relative to this file, optional, the file may not exist)
+    gApiAccessTokenFile: google-access-token.json   # The path to an access token file (relative to this file, optional, the file may not exist)
