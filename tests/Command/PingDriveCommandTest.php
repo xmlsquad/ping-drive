@@ -87,7 +87,7 @@ class PingDriveCommandTest extends TestCase
      *
      * @dataProvider pingDriveFolderProvider
      */
-    public function testPingDriveFolder($url, $id, $name, $content)
+    public function testPingDriveFolder($driveUrl, $id, $name, $content)
     {
         $contentItemToAPIFile = function ($item) {
             list($type, $name) = $item;
@@ -156,7 +156,7 @@ class PingDriveCommandTest extends TestCase
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'url' => $url,
+            'drive-url' => $driveUrl,
             '--client-secret-file' => $this->secretPath,
             '--access-token-file' => $this->tokenPath
         ]);
@@ -189,7 +189,7 @@ class PingDriveCommandTest extends TestCase
      *
      * @dataProvider pingGoogleSheetProvider
      */
-    public function testPingGoogleSheet($url, $id, $name, $sheets, $table = [])
+    public function testPingGoogleSheet($driveUrl, $id, $name, $sheets, $table = [])
     {
         $driveFile = new \Google_Service_Drive_DriveFile([
             'id' => $id,
@@ -246,7 +246,7 @@ class PingDriveCommandTest extends TestCase
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'url' => $url,
+            'drive-url' => $driveUrl,
             '--client-secret-file' => $this->secretPath,
             '--access-token-file' => $this->tokenPath
         ]);
@@ -286,7 +286,7 @@ class PingDriveCommandTest extends TestCase
      *
      * @dataProvider pingGoogleSlideProvider
      */
-    public function testPingGoogleSlide($url, $id, $name)
+    public function testPingGoogleSlide($driveUrl, $id, $name)
     {
         $driveFile = new \Google_Service_Drive_DriveFile([
             'id' => $id,
@@ -308,7 +308,7 @@ class PingDriveCommandTest extends TestCase
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'url' => $url,
+            'drive-url' => $driveUrl,
             '--client-secret-file' => $this->secretPath,
             '--access-token-file' => $this->tokenPath
         ]);
@@ -332,7 +332,7 @@ class PingDriveCommandTest extends TestCase
      *
      * @dataProvider pingOtherDriveFileProvider
      */
-    public function testPingOtherDriveFile($url, $id, $name, $mimeType)
+    public function testPingOtherDriveFile($driveUrl, $id, $name, $mimeType)
     {
         $driveFile = new \Google_Service_Drive_DriveFile([
             'id' => $id,
@@ -354,7 +354,7 @@ class PingDriveCommandTest extends TestCase
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'url' => $url,
+            'drive-url' => $driveUrl,
             '--client-secret-file' => $this->secretPath,
             '--access-token-file' => $this->tokenPath
         ]);
@@ -378,7 +378,7 @@ class PingDriveCommandTest extends TestCase
      *
      * @dataProvider pingInaccessibleDriveFileProvider
      */
-    public function testPingInaccessibleDriveFile($url, $code, $expectedMessage)
+    public function testPingInaccessibleDriveFile($driveUrl, $code, $expectedMessage)
     {
         $driveFilesMock = $this->createMock('Google_Service_Drive_Resource_Files');
         $driveFilesMock->method('get')->willThrowException(new \Google_Service_Exception('Test', $code));
@@ -394,7 +394,7 @@ class PingDriveCommandTest extends TestCase
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'url' => $url,
+            'drive-url' => $driveUrl,
             '--client-secret-file' => $this->secretPath,
             '--access-token-file' => $this->tokenPath
         ]);
@@ -417,13 +417,13 @@ class PingDriveCommandTest extends TestCase
      *
      * @dataProvider notAGoogleDriveURLProvider
      */
-    public function pingNotAGoogleDriveURL($url, $expectedMessage)
+    public function pingNotAGoogleDriveURL($driveUrl, $expectedMessage)
     {
         $this->googleAPIFactoryMock->expects($this->never())->method('make');
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'url' => $url,
+            'drive-url' => $driveUrl,
             '--client-secret-file' => $this->secretPath,
             '--access-token-file' => $this->tokenPath
         ]);
@@ -465,7 +465,7 @@ class PingDriveCommandTest extends TestCase
         $commandTester = new CommandTester($this->command);
         $commandTester->setInputs(['auth-code']);
         $commandTester->execute([
-            'url' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ',
+            'drive-url' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ',
             '--client-secret-file' => $this->secretPath,
             '--access-token-file' => $this->tokenPath
         ], [
@@ -507,7 +507,7 @@ class PingDriveCommandTest extends TestCase
         $commandTester = new CommandTester($this->command);
         $commandTester->setInputs(['foo']);
         $commandTester->execute([
-            'url' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ',
+            'drive-url' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ',
             '--client-secret-file' => $this->secretPath,
             '--access-token-file' => $this->tokenPath,
             '--force-authenticate' => true
@@ -552,7 +552,7 @@ class PingDriveCommandTest extends TestCase
         $this->assertEquals($workingDirectory, getcwd());
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'url' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ'
+            'drive-url' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ'
         ], [
             'verbosity' => OutputInterface::VERBOSITY_VERBOSE
         ]);

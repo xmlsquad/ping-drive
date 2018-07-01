@@ -64,7 +64,7 @@ class PingDriveCommand extends Command
             ->setDescription('Pings a Google Drive folder, Google Docs, Google Sheets or Google Slides URL')
             ->setHelp('See the readme')
 
-            ->addArgument('url', InputArgument::REQUIRED, 'The target item URL')
+            ->addArgument('drive-url', InputArgument::REQUIRED, 'The target item URL')
 
             ->addOption('client-secret-file', null, InputOption::VALUE_REQUIRED, 'The path to an application client'
                 . ' secret file. If not specified, the command will try to get a path from a '.static::CONFIG_FILE_NAME
@@ -88,14 +88,14 @@ class PingDriveCommand extends Command
             return 1;
         }
 
-        $urlData = $this->getURLData($options['url']);
+        $driveUrlData = $this->getURLData($options['drive-url']);
 
-        switch ($urlData['type']) {
+        switch ($driveUrlData['type']) {
             case 'google-drive':
                 if ($output->isVerbose()) {
                     $output->writeln('The URL points to Google Drive, will get more information from Google');
                 }
-                return $this->processGoogleDriveId($input, $output, $options, $urlData['id']) ? 0 : 1;
+                return $this->processGoogleDriveId($input, $output, $options, $driveUrlData['id']) ? 0 : 1;
             case 'http':
                 $this->writeError($output, 'The URL does NOT point to a file or folder on Google Drive');
                 return 1;
@@ -112,7 +112,7 @@ class PingDriveCommand extends Command
      * @param OutputInterface $output
      * @return array|null If the input is incorrect, null is returned. Otherwise an options array is returned. It has
      *    the following keys:
-     *     - url (string)
+     *     - drive-url (string)
      *     - forceAuthenticate (bool)
      *     - clientSecretFile (string)
      *     - accessTokenFile (string|null)
@@ -120,7 +120,7 @@ class PingDriveCommand extends Command
     protected function parseInitialInput(InputInterface $input, OutputInterface $output): ?array
     {
         $options = [
-            'url' => $input->getArgument('url'),
+            'drive-url' => $input->getArgument('drive-url'),
             'forceAuthenticate' => (bool)$input->getOption('force-authenticate')
         ];
 
@@ -169,13 +169,25 @@ class PingDriveCommand extends Command
         return $options;
     }
 
+
+    /**
+     * Get DataSourceOption [drive-url]
+     *
+     * @param InputInterface $input
+     * @return mixed
+     */
+    protected function getDriveUrlOption(InputInterface $input){
+        return $input->getArgument('drive-url');
+    }
+
+
     /**
      * Gets a URL type and data
      *
-     * @param string $url The url
+     * @param string $driveUrl The drive-url
      * @return array The `type` key contains the type name. Other keys depend on the type.
      */
-    protected function getURLData(string $url): array
+    protected function getURLData(string $driveUrl): array
     {
         /*
          * Known URL types:
@@ -190,7 +202,7 @@ class PingDriveCommand extends Command
         // Is it a Google Drive|Docs URL?
         if (preg_match(
             '~^(https?://)?(drive|docs)\.google\.[a-z]+/.*(/d/|/folders/|[\?&]id=)([a-z0-9\-_]{20,})([/?&#]|$)~i',
-            $url,
+            $driveUrl,
             $matches
         )) {
             // Any Google Drive item can be obtained using a single API method: https://developers.google.com/drive/api/v3/reference/files/get
@@ -201,10 +213,10 @@ class PingDriveCommand extends Command
         }
 
         // Is it a URL?
-        if (preg_match('~^(https?://)?[a-z0-9.@\-_\x{0080}-\x{FFFF}]+(:[0-9]+)?(/|$)~iu', $url, $matches)) {
+        if (preg_match('~^(https?://)?[a-z0-9.@\-_\x{0080}-\x{FFFF}]+(:[0-9]+)?(/|$)~iu', $driveUrl, $matches)) {
             return [
                 'type' => 'http',
-                'url' => ($matches[1] ? '' : 'http://').$url
+                'drive-url' => ($matches[1] ? '' : 'http://').$driveUrl
             ];
         }
 
