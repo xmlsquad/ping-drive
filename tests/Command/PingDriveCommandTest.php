@@ -156,7 +156,7 @@ class PingDriveCommandTest extends TestCase
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'drive-url' => $driveUrl,
+            'driveUrl' => $driveUrl,
             '--gApiOAuthSecretFile' => $this->secretPath,
             '--access-token-file' => $this->tokenPath
         ]);
@@ -246,7 +246,7 @@ class PingDriveCommandTest extends TestCase
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'drive-url' => $driveUrl,
+            'driveUrl' => $driveUrl,
             '--gApiOAuthSecretFile' => $this->secretPath,
             '--access-token-file' => $this->tokenPath
         ]);
@@ -308,7 +308,7 @@ class PingDriveCommandTest extends TestCase
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'drive-url' => $driveUrl,
+            'driveUrl' => $driveUrl,
             '--gApiOAuthSecretFile' => $this->secretPath,
             '--access-token-file' => $this->tokenPath
         ]);
@@ -354,7 +354,7 @@ class PingDriveCommandTest extends TestCase
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'drive-url' => $driveUrl,
+            'driveUrl' => $driveUrl,
             '--gApiOAuthSecretFile' => $this->secretPath,
             '--access-token-file' => $this->tokenPath
         ]);
@@ -394,7 +394,7 @@ class PingDriveCommandTest extends TestCase
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'drive-url' => $driveUrl,
+            'driveUrl' => $driveUrl,
             '--gApiOAuthSecretFile' => $this->secretPath,
             '--access-token-file' => $this->tokenPath
         ]);
@@ -423,7 +423,7 @@ class PingDriveCommandTest extends TestCase
 
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'drive-url' => $driveUrl,
+            'driveUrl' => $driveUrl,
             '--gApiOAuthSecretFile' => $this->secretPath,
             '--access-token-file' => $this->tokenPath
         ]);
@@ -465,7 +465,7 @@ class PingDriveCommandTest extends TestCase
         $commandTester = new CommandTester($this->command);
         $commandTester->setInputs(['auth-code']);
         $commandTester->execute([
-            'drive-url' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ',
+            'driveUrl' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ',
             '--gApiOAuthSecretFile' => $this->secretPath,
             '--access-token-file' => $this->tokenPath
         ], [
@@ -507,7 +507,7 @@ class PingDriveCommandTest extends TestCase
         $commandTester = new CommandTester($this->command);
         $commandTester->setInputs(['foo']);
         $commandTester->execute([
-            'drive-url' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ',
+            'driveUrl' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ',
             '--gApiOAuthSecretFile' => $this->secretPath,
             '--access-token-file' => $this->tokenPath,
             '--force-authenticate' => true
@@ -552,7 +552,7 @@ class PingDriveCommandTest extends TestCase
         $this->assertEquals($workingDirectory, getcwd());
         $commandTester = new CommandTester($this->command);
         $commandTester->execute([
-            'drive-url' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ'
+            'driveUrl' => 'https://drive.google.com/drive/u/0/folders/0B5q9i2h-vGaCR1BvbXAzNEtmeTQ'
         ], [
             'verbosity' => OutputInterface::VERBOSITY_VERBOSE
         ]);

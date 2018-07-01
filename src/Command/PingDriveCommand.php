@@ -89,7 +89,7 @@ class PingDriveCommand extends AbstractCommand
             return 1;
         }
 
-        $driveUrlData = $this->getURLData($options['drive-url']);
+        $driveUrlData = $this->getURLData($options['driveUrl']);
 
         switch ($driveUrlData['type']) {
             case 'google-drive':
@@ -113,7 +113,7 @@ class PingDriveCommand extends AbstractCommand
      * @param OutputInterface $output
      * @return array|null If the input is incorrect, null is returned. Otherwise an options array is returned. It has
      *    the following keys:
-     *     - drive-url (string)
+     *     - driveUrl (string)
      *     - forceAuthenticate (bool)
      *     - gApiOAuthSecretFile (string)
      *     - accessTokenFile (string|null)
@@ -121,7 +121,7 @@ class PingDriveCommand extends AbstractCommand
     protected function parseInitialInput(InputInterface $input, OutputInterface $output): ?array
     {
         $options = [
-            'drive-url' => $this->getDriveUrlArgument($input),
+            'driveUrl' => $this->getDriveUrlArgument($input),
             'forceAuthenticate' => (bool)$input->getOption('force-authenticate')
         ];
 
@@ -174,7 +174,7 @@ class PingDriveCommand extends AbstractCommand
     /**
      * Gets a URL type and data
      *
-     * @param string $driveUrl The drive-url
+     * @param string $driveUrl The driveUrl
      * @return array The `type` key contains the type name. Other keys depend on the type.
      */
     protected function getURLData(string $driveUrl): array
@@ -206,7 +206,7 @@ class PingDriveCommand extends AbstractCommand
         if (preg_match('~^(https?://)?[a-z0-9.@\-_\x{0080}-\x{FFFF}]+(:[0-9]+)?(/|$)~iu', $driveUrl, $matches)) {
             return [
                 'type' => 'http',
-                'drive-url' => ($matches[1] ? '' : 'http://').$driveUrl
+                'driveUrl' => ($matches[1] ? '' : 'http://').$driveUrl
             ];
         }
 
