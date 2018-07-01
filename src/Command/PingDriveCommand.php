@@ -66,8 +66,8 @@ class PingDriveCommand extends AbstractCommand
             ->setHelp('See the readme')
 
             ->doConfigureDriveUrlArgument('The target item URL')
-
-            ->addOption('client-secret-file', null, InputOption::VALUE_REQUIRED, 'The path to an application client'
+            ->doConfigureGApiSecretFileOption(
+                InputOption::VALUE_OPTIONAL, 'The path to an application client'
                 . ' secret file. If not specified, the command will try to get a path from a '.static::CONFIG_FILE_NAME
                 . ' file. A client secret is required.')
 
@@ -127,7 +127,7 @@ class PingDriveCommand extends AbstractCommand
 
         $needToParseConfigFile = false;
 
-        $options['clientSecretFile'] = $input->getOption('client-secret-file');
+        $options['clientSecretFile'] = $this->doGetGApiSecretFileOption($input);
         if ($options['clientSecretFile'] === null) {
             $needToParseConfigFile = true;
             if ($output->isVerbose()) {
