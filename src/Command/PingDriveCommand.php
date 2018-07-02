@@ -28,7 +28,7 @@ class PingDriveCommand extends AbstractCommand
     /**
      * The name of fallback configuration file for a case when the API files paths are not specified in the input
      */
-    const CONFIG_FILE_NAME = 'scapesettings.yaml';
+    const CONFIG_FILE_NAME = 'XmlAuthoringProjectSettings.yaml';
 
     /**
      * @var GoogleAPIFactory Google API factory

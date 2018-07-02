@@ -119,8 +119,8 @@ if [[ ping-drive -q ... ]]; then echo "Success!"; else echo "Fail"; fi
 The client secret and the access token paths can be read from a configuration file. 
 In this case you don't need to set this options while starting the command.
 
-The configuration file must be named `scapesettings.yaml` and located in the directory where the command is run or in one of the parent directories.
-[scapesettings.yaml.dist](scapesettings.yaml.dist) is an example of the configuration file with required parameters.
+The configuration file must be named `XmlAuthoringProjectSettings.yaml` and located in the directory where the command is run or in one of the parent directories.
+[XmlAuthoringProjectSettings.yaml.dist](XmlAuthoringProjectSettings.yaml.dist) is an example of the configuration file with required parameters.
 
 ### Troubleshooting
 

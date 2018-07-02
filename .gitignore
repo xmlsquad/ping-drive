@@ -1,5 +1,5 @@
 /vendor/
 /composer.lock
-/scapesettings.yaml
+/XmlAuthoringProjectSettings.yaml
 /google-client-secret.json
 /google-access-token.json
