@@ -83,19 +83,25 @@ class PingDriveCommand extends AbstractCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $options = $this->parseInitialInput($input, $output);
-        if ($options === null) {
+
+        if ((!$this->findGApiOAuthSecretFileValue($input, $output) || (!$this->findGApiAccessTokenFileValue($input, $output)))) {
             return 1;
         }
 
-        $driveUrlData = $this->getURLData($options['driveUrl']);
+        $driveUrlData = $this->getURLData($this->getDriveUrlArgument($input));
 
         switch ($driveUrlData['type']) {
             case 'google-drive':
                 if ($output->isVerbose()) {
                     $output->writeln('The URL points to Google Drive, will get more information from Google');
                 }
-                return $this->processGoogleDriveId($input, $output, $options, $driveUrlData['id']) ? 0 : 1;
+                return $this->processGoogleDriveId(
+                    $input,
+                    $output,
+                    $this->findGApiOAuthSecretFileValue($input, $output),
+                    $this->findGApiAccessTokenFileValue($input, $output),
+                    (bool) $this->getForceAuthenticateOption($input),
+                    $driveUrlData['id']) ? 0 : 1;
             case 'http':
                 $this->writeError($output, 'The URL does NOT point to a file or folder on Google Drive');
                 return 1;
@@ -106,36 +112,63 @@ class PingDriveCommand extends AbstractCommand
     }
 
     /**
-     * Parses and checks the initial user input
+     * Attempts to find GApiOAuthSecretFile from option or config.
      *
      * @param InputInterface $input
      * @param OutputInterface $output
-     * @return array|null If the input is incorrect, null is returned. Otherwise an options array is returned. It has
-     *    the following keys:
-     *     - driveUrl (string)
-     *     - forceAuthenticate (bool)
-     *     - gApiOAuthSecretFile (string)
-     *     - gApiAccessTokenFile (string|null)
+     * @return string|null If the input is incorrect, null is returned. Otherwise an string is returned.
      */
-    protected function parseInitialInput(InputInterface $input, OutputInterface $output): ?array
+    protected function findGApiOAuthSecretFileValue(InputInterface $input, OutputInterface $output): ?string
     {
-        $options = [
-            'driveUrl' => $this->getDriveUrlArgument($input),
-            'forceAuthenticate' => (bool)$this->getForceAuthenticateOption($input)
-        ];
-
         $needToParseConfigFile = false;
 
-        $options['gApiOAuthSecretFile'] = $this->getGApiOAuthSecretFileOption($input);
-        if ($options['gApiOAuthSecretFile'] === null) {
+        $gApiOAuthSecretFile = $this->getGApiOAuthSecretFileOption($input);
+        if ($gApiOAuthSecretFile === null) {
             $needToParseConfigFile = true;
             if ($output->isVerbose()) {
                 $output->writeln('The client secret file path is not specified, will try to get the path from a configuration file');
             }
         }
 
-        $options['gApiAccessTokenFile'] = $this->getGApiAccessTokenFileOption($input);
-        if ($options['gApiAccessTokenFile'] === null) {
+
+        // If the API file paths are not specified, find and read a configuration file
+        if ($needToParseConfigFile) {
+            if(!$this->isGApiAuthConfigOptionsFindable($output)){
+                return null;
+            }
+
+            if ($gApiOAuthSecretFile === null) {
+
+                if ($this->findGApiOAuthSecretFileConfig($output)) {
+                    $gApiOAuthSecretFile = $this->findGApiOAuthSecretFileConfig($output);
+                } else {
+                    $this->writeError($output, 'The client secret file is specified neither in the CLI arguments nor in'
+                        . ' the configuration file');
+                    return null;
+                }
+            }
+
+        }
+
+        return $gApiOAuthSecretFile;
+    }
+
+
+    /**
+     * Attempts to find GApiAccessTokenFile from option or config.
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return stirng|null If the input is incorrect, null is returned. Otherwise an string is returned.
+     */
+    protected function findGApiAccessTokenFileValue(InputInterface $input, OutputInterface $output): ?string
+    {
+
+        $needToParseConfigFile = false;
+
+
+        $gApiAccessTokenFile = $this->getGApiAccessTokenFileOption($input);
+        if ($gApiAccessTokenFile === null) {
             $needToParseConfigFile = true;
             if ($output->isVerbose()) {
                 $output->writeln('The access token file path is not specified, will try to get the path from a configuration file');
@@ -148,24 +181,15 @@ class PingDriveCommand extends AbstractCommand
                 return null;
             }
 
-            if ($options['gApiOAuthSecretFile'] === null) {
-
-                if ($this->findGApiOAuthSecretFileConfig($output)) {
-                    $options['gApiOAuthSecretFile'] = $this->findGApiOAuthSecretFileConfig($output);
-                } else {
-                    $this->writeError($output, 'The client secret file is specified neither in the CLI arguments nor in'
-                        . ' the configuration file');
-                    return null;
-                }
-            }
-
-            if ($options['gApiAccessTokenFile'] === null && $this->findGApiAccessTokenFileConfig($output)) {
-                $options['gApiAccessTokenFile'] = $this->findGApiAccessTokenFileConfig($output);
+            if ($gApiAccessTokenFile === null && $this->findGApiAccessTokenFileConfig($output)) {
+                $gApiAccessTokenFile = $this->findGApiAccessTokenFileConfig($output);
             }
         }
 
-        return $options;
+        return $gApiAccessTokenFile;
     }
+
+
 
     protected function isGApiAuthConfigOptionsFindable(OutputInterface $output)
     {
@@ -181,7 +205,12 @@ class PingDriveCommand extends AbstractCommand
 
     }
 
-
+    /**
+     * Attempts to find config setting for [gApiAccessTokenFile].
+     *
+     * @param OutputInterface $output
+     * @return mixed|null
+     */
     protected function findGApiAccessTokenFileConfig(OutputInterface $output)
     {
         try {
@@ -282,7 +311,9 @@ class PingDriveCommand extends AbstractCommand
     protected function processGoogleDriveId(
         InputInterface $input,
         OutputInterface $output,
-        array $options,
+        $gApiOAuthSecretFile,
+        $gApiAccessTokenFile,
+        $forceAuthenticate,
         string $id
     ): bool {
         $googleAPIClient = $this->googleAPIFactory->make($this->makeConsoleLogger($output));
@@ -291,10 +322,10 @@ class PingDriveCommand extends AbstractCommand
         if (!$googleAPIClient->authenticateFromCommand(
             $input,
             $output,
-            $options['gApiOAuthSecretFile'],
-            $options['gApiAccessTokenFile'],
+            $gApiOAuthSecretFile,
+            $gApiAccessTokenFile,
             [\Google_Service_Drive::DRIVE_READONLY, \Google_Service_Sheets::SPREADSHEETS_READONLY],
-            $options['forceAuthenticate']
+            $forceAuthenticate
         )) {
             return false;
         }
