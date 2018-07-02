@@ -528,7 +528,7 @@ class PingDriveCommandTest extends TestCase
      */
     public function testGetOptionsFromConfigFile($workindSubdirectory)
     {
-        $configPath = static::TEMP_DIR.DIRECTORY_SEPARATOR.PingDriveCommand::CONFIG_FILE_NAME;
+        $configPath = static::TEMP_DIR.DIRECTORY_SEPARATOR.PingDriveCommand::DEFAULT_CONFIG_FILENAME;
         $secretPath = static::TEMP_DIR.DIRECTORY_SEPARATOR.'absolute-path.json';
         $tokenRelativePath = '.'.DIRECTORY_SEPARATOR.'relative-path.json';
         $tokenAbsolutePath = static::TEMP_DIR.DIRECTORY_SEPARATOR.$tokenRelativePath;
