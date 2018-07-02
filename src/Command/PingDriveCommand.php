@@ -73,8 +73,7 @@ class PingDriveCommand extends AbstractCommand
 
             ->configureGApiAccessTokenFileOption()
 
-            ->addOption('forceAuthenticate', null, InputOption::VALUE_NONE, 'If set, you will be asked to authenticate'
-                . ' even if an access token exist.');
+            ->configureForceAuthenticateOption();
     }
 
 
@@ -122,7 +121,7 @@ class PingDriveCommand extends AbstractCommand
     {
         $options = [
             'driveUrl' => $this->getDriveUrlArgument($input),
-            'forceAuthenticate' => (bool)$input->getOption('forceAuthenticate')
+            'forceAuthenticate' => (bool)$this->getForceAuthenticateOption($input)
         ];
 
         $needToParseConfigFile = false;
