@@ -66,7 +66,7 @@ class PingDriveCommand extends AbstractCommand
             ->setHelp('See the readme')
 
             ->doConfigureDriveUrlArgument('The target item URL')
-            ->doConfigureGApiOAuthSecretFileOption(
+            ->configureGApiOAuthSecretFileOption(
                 InputOption::VALUE_OPTIONAL, 'The path to an application client'
                 . ' secret file. If not specified, the command will try to get a path from a '.static::CONFIG_FILE_NAME
                 . ' file. A client secret is required.')
@@ -127,7 +127,7 @@ class PingDriveCommand extends AbstractCommand
 
         $needToParseConfigFile = false;
 
-        $options['gApiOAuthSecretFile'] = $this->doGetGApiOAuthSecretFileOption($input);
+        $options['gApiOAuthSecretFile'] = $this->getGApiOAuthSecretFileOption($input);
         if ($options['gApiOAuthSecretFile'] === null) {
             $needToParseConfigFile = true;
             if ($output->isVerbose()) {
