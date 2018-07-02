@@ -303,10 +303,6 @@ class PingDriveCommand extends AbstractCommand
     }
 
 
-    protected function getCommandStaticConfigFilename()
-    {
-        return static::DEFAULT_CONFIG_FILENAME;
-    }
 
 
 
