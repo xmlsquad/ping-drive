@@ -71,13 +71,13 @@ class PingDriveCommand extends AbstractCommand
                 . ' secret file. If not specified, the command will try to get a path from a '.static::CONFIG_FILE_NAME
                 . ' file. A client secret is required.')
 
-            ->addOption('gApiAccessTokenFile', null, InputOption::VALUE_REQUIRED, 'The path to an access token file. The'
-                . ' file may not exists. If an access token file is used, the command remembers user credentials and'
-                . ' doesn\'t require a Google authentication next time.')
+            ->configureGApiAccessTokenFileOption()
 
             ->addOption('forceAuthenticate', null, InputOption::VALUE_NONE, 'If set, you will be asked to authenticate'
                 . ' even if an access token exist.');
     }
+
+
 
     /**
      * {@inheritDoc}
@@ -135,7 +135,7 @@ class PingDriveCommand extends AbstractCommand
             }
         }
 
-        $options['gApiAccessTokenFile'] = $input->getOption('gApiAccessTokenFile');
+        $options['gApiAccessTokenFile'] = $this->getGApiAccessTokenFileOption($input);
         if ($options['gApiAccessTokenFile'] === null) {
             $needToParseConfigFile = true;
             if ($output->isVerbose()) {
