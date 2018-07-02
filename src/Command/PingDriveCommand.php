@@ -68,7 +68,7 @@ class PingDriveCommand extends AbstractCommand
             ->doConfigureDriveUrlArgument('The target item URL')
             ->configureGApiOAuthSecretFileOption(
                 InputOption::VALUE_OPTIONAL, 'The path to an application client'
-                . ' secret file. If not specified, the command will try to get a path from a '.static::CONFIG_FILE_NAME
+                . ' secret file. If not specified, the command will try to get a path from a '.$this->getCommandStaticConfigFilename()
                 . ' file. A client secret is required.')
 
             ->configureGApiAccessTokenFileOption()
@@ -144,16 +144,14 @@ class PingDriveCommand extends AbstractCommand
 
         // If the API file paths are not specified, find and read a configuration file
         if ($needToParseConfigFile) {
-            try {
-                $dataFromConfigFile = $this->getDataFromConfigFile($output);
-            } catch (\RuntimeException $exception) {
-                $this->writeError($output, 'Couldn\'t read a configuration file: '.$exception->getMessage());
+            if(!$this->isGApiAuthConfigOptionsFindable($output)){
                 return null;
             }
 
             if ($options['gApiOAuthSecretFile'] === null) {
-                if (isset($dataFromConfigFile['gApiOAuthSecretFile'])) {
-                    $options['gApiOAuthSecretFile'] = $dataFromConfigFile['gApiOAuthSecretFile'];
+
+                if ($this->findGApiOAuthSecretFileConfig($output)) {
+                    $options['gApiOAuthSecretFile'] = $this->findGApiOAuthSecretFileConfig($output);
                 } else {
                     $this->writeError($output, 'The client secret file is specified neither in the CLI arguments nor in'
                         . ' the configuration file');
@@ -161,13 +159,72 @@ class PingDriveCommand extends AbstractCommand
                 }
             }
 
-            if ($options['gApiAccessTokenFile'] === null && isset($dataFromConfigFile['gApiAccessTokenFile'])) {
-                $options['gApiAccessTokenFile'] = $dataFromConfigFile['gApiAccessTokenFile'];
+            if ($options['gApiAccessTokenFile'] === null && $this->findGApiAccessTokenFileConfig($output)) {
+                $options['gApiAccessTokenFile'] = $this->findGApiAccessTokenFileConfig($output);
             }
         }
 
         return $options;
     }
+
+    protected function isGApiAuthConfigOptionsFindable(OutputInterface $output)
+    {
+        try {
+            if ($this->extractGApiAuthConfigSettings($this->getDataFromConfigFile($output), $output)){
+                return true;
+            }
+        } catch (\RuntimeException $exception) {
+            $this->writeError($output, 'Couldn\'t read a configuration file: '.$exception->getMessage());
+            return false;
+        }
+
+
+    }
+
+
+    protected function findGApiAccessTokenFileConfig(OutputInterface $output)
+    {
+        try {
+            $dataFromConfigFile = $this->extractGApiAuthConfigSettings($this->getDataFromConfigFile($output), $output);
+        } catch (\RuntimeException $exception) {
+            $this->writeError($output, 'Couldn\'t read a configuration file: '.$exception->getMessage());
+            return null;
+        }
+
+
+        if (isset($dataFromConfigFile['gApiAccessTokenFile'])) {
+            return $dataFromConfigFile['gApiAccessTokenFile'];
+
+        }
+        //else
+        return null;
+    }
+
+    /**
+     * Attempts to find [gApiOAuthSecretFile] config setting.
+     *
+     *
+     * @param OutputInterface $output
+     * @return mixed|null|string
+     */
+    protected function findGApiOAuthSecretFileConfig(OutputInterface $output)
+    {
+        try {
+            $dataFromConfigFile = $this->extractGApiAuthConfigSettings($this->getDataFromConfigFile($output), $output);
+        } catch (\RuntimeException $exception) {
+            $this->writeError($output, 'Couldn\'t read a configuration file: '.$exception->getMessage());
+            return null;
+        }
+
+        if (isset($dataFromConfigFile['gApiOAuthSecretFile'])) {
+            return $dataFromConfigFile['gApiOAuthSecretFile'];
+
+        }
+        //else
+        return null;
+    }
+
+
 
 
     /**
@@ -366,33 +423,50 @@ class PingDriveCommand extends AbstractCommand
      * Gets options values from a configuration file
      *
      * @param OutputInterface $output
-     * @return string[]|null Options values; null means that a configuration file wasn't found. The keys are:
+     * @return array[]|null Options values; null means that a configuration file wasn't found. The keys are:
      *  - gApiOAuthSecretFile (string|null)
      *  - gApiAccessTokenFile (string|null)
      * @throws \RuntimeException If a configuration file can't be read or parsed
      */
     protected function getDataFromConfigFile(OutputInterface $output): ?array
     {
-        $configFilePath = $this->findConfigFile($output);
-        if ($configFilePath === null) {
+        
+        if ($this->findConfigFile($output) === null) {
             if ($output->isVerbose()) {
-                $output->writeln('A configuration file `'.static::CONFIG_FILE_NAME.'`'
+                $output->writeln('A configuration file `'.$this->getCommandStaticConfigFilename().'`'
                     . ' exists neither in the current directory nor in any parent directory');
             }
             return null;
         }
 
-        $configFileDir = dirname($configFilePath);
+
         if ($output->isVerbose()) {
-            $output->writeln('Reading options from the `' . $configFilePath . '` configuration file');
+            $output->writeln('Reading options from the `' . $this->findConfigFile($output) . '` configuration file');
         }
 
         try {
-            $configData = Yaml\Yaml::parseFile($configFilePath);
+            $configData = Yaml\Yaml::parseFile($this->findConfigFile($output));
         } catch (Yaml\Exception\ParseException $exception) {
             throw new \RuntimeException('Couldn\'t parse the configuration file: '.$exception->getMessage());
         }
 
+        return $configData;
+    }
+
+    protected function getCommandStaticConfigFilename()
+    {
+        return static::CONFIG_FILE_NAME;
+    }
+
+    /**
+     * Extract GApiAuth settings from array of config data.
+     *
+     * @param array $configData
+     * @param OutputInterface $output
+     * @return array Empty if no settings extracted.
+     */
+    protected function extractGApiAuthConfigSettings(array $configData, OutputInterface $output)
+    {
         $options = [];
 
         // Parsing paths
@@ -405,7 +479,7 @@ class PingDriveCommand extends AbstractCommand
                 continue;
             }
 
-            $options[$option] = $this->getFullPath($configFileDir, $path);
+            $options[$option] = $this->getFullPath(dirname($this->findConfigFile($output)), $path);
         }
 
         return $options;
@@ -426,7 +500,7 @@ class PingDriveCommand extends AbstractCommand
         }
 
         for ($i = 0; $i < 10000; ++$i) { // `for` protects from an infinite loop
-            $file = $directory.DIRECTORY_SEPARATOR.static::CONFIG_FILE_NAME;
+            $file = $directory . DIRECTORY_SEPARATOR . $this->getCommandStaticConfigFilename();
 
             if (@is_file($file)) {
                 return $file;
