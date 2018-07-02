@@ -21,6 +21,8 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 class PingDriveCommandTest extends TestCase
 {
+
+
     /**
      * Path to a directory where to store temporary test files
      */
@@ -533,7 +535,7 @@ class PingDriveCommandTest extends TestCase
         $tokenRelativePath = '.'.DIRECTORY_SEPARATOR.'relative-path.json';
         $tokenAbsolutePath = static::TEMP_DIR.DIRECTORY_SEPARATOR.$tokenRelativePath;
 
-        file_put_contents($configPath, 'google: {gApiOAuthSecretFile: "'.$secretPath.'", gApiAccessTokenFile: "'.$tokenRelativePath.'"}');
+        file_put_contents($configPath, PingDriveCommand::ROOT_CONFIG_G_API_ACCESS_KEY . ': {gApiOAuthSecretFile: "'.$secretPath.'", gApiAccessTokenFile: "'.$tokenRelativePath.'"}');
         file_put_contents($secretPath, '{"secret": "ok"}');
         file_put_contents($tokenAbsolutePath, '{"token": "ok"}');
 
