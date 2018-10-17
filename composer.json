@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": ">=7.1",
-        "xmlsquad/xml-authoring-library": "0.3.3",
+        "xmlsquad/xml-authoring-library": "dev-master",
         "symfony/console": "^3.4",
         "symfony/yaml": "^3.4",
         "symfony/filesystem": "^3.4",
