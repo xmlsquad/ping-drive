@@ -3,10 +3,10 @@
 namespace XmlSquad\PingDrive\Command;
 
 use XmlSquad\Library\Command\AbstractCommand;
-use XmlSquad\Library\Console\ConsoleLogger;
+
 use XmlSquad\Library\GoogleAPI\GoogleAPIClient;
 use XmlSquad\Library\GoogleAPI\GoogleAPIFactory;
-use Psr\Log\LogLevel;
+
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableCell;
@@ -307,24 +307,6 @@ class PingDriveCommand extends AbstractCommand
 
 
 
-    /**
-     * Creates a PSR logger instance which prints messages to the command output
-     *
-     * @param OutputInterface $output
-     * @return ConsoleLogger
-     */
-    protected function makeConsoleLogger(OutputInterface $output): ConsoleLogger
-    {
-        return new ConsoleLogger($output, [
-            LogLevel::DEBUG  => OutputInterface::VERBOSITY_VERY_VERBOSE,
-            LogLevel::INFO   => OutputInterface::VERBOSITY_VERBOSE,
-            LogLevel::NOTICE => OutputInterface::VERBOSITY_NORMAL
-        ], [
-            LogLevel::DEBUG  => '',
-            LogLevel::INFO   => '',
-            LogLevel::NOTICE => 'info'
-        ]);
-    }
 
     /**
      * Prints an error to an output
