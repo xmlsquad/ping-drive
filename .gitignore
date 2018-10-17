@@ -1,5 +1,1 @@
-/vendor/
-/composer.lock
-/XmlAuthoringProjectSettings.yaml
-/google-client-secret.json
-/google-access-token.json
+.DS_Store
