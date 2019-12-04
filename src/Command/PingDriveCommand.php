@@ -87,9 +87,9 @@ class PingDriveCommand extends AbstractCommand
 
         switch ($driveUrlData['type']) {
             case 'google-drive':
-                if ($output->isVerbose()) {
-                    $output->writeln('The URL points to Google Drive, will get more information from Google');
-                }
+
+                $output->writeln('The URL points to Google Drive, will get more information from Google', OutputInterface::VERBOSITY_NORMAL);
+
                 return $this->processGoogleDriveId(
                     $input,
                     $output,
@@ -210,13 +210,13 @@ class PingDriveCommand extends AbstractCommand
                 $this->writeGoogleSheetData($output, $googleAPIClient->sheetsService, $file);
                 break;
             case GoogleAPIClient::MIME_TYPE_GOOGLE_PRESENTATION:
-                $output->writeln('<info>The URL is a Google Slides file</info>');
-                $output->writeln('Name: '.$file->getName());
+                $output->writeln('<info>The URL is a Google Slides file</info>', OutputInterface::VERBOSITY_NORMAL);
+                $output->writeln('Name: '.$file->getName(), OutputInterface::VERBOSITY_NORMAL);
                 break;
             default:
-                $output->writeln('<info>The URL is a Google Drive file</info>');
-                $output->writeln('Name: '.$file->getName());
-                $output->writeln('Type: '.$file->getMimeType());
+                $output->writeln('<info>The URL is a Google Drive file</info>', OutputInterface::VERBOSITY_NORMAL);
+                $output->writeln('Name: '.$file->getName(), OutputInterface::VERBOSITY_NORMAL);
+                $output->writeln('Type: '.$file->getMimeType(), OutputInterface::VERBOSITY_NORMAL);
         }
 
         return true;
@@ -235,9 +235,9 @@ class PingDriveCommand extends AbstractCommand
         \Google_Service_Drive $drive,
         \Google_Service_Drive_DriveFile $folder
     ) {
-        $output->writeln('<info>The URL is a Google Drive folder</info>');
-        $output->writeln('Name: '.$folder->getName());
-        $output->writeln('Content:');
+        $output->writeln('<info>The URL is a Google Drive folder</info>', OutputInterface::VERBOSITY_NORMAL);
+        $output->writeln('Name: '.$folder->getName(), OutputInterface::VERBOSITY_NORMAL);
+        $output->writeln('Content:', OutputInterface::VERBOSITY_NORMAL);
 
         $pageToken = null;
 
@@ -253,7 +253,8 @@ class PingDriveCommand extends AbstractCommand
                 /** @var \Google_Service_Drive_DriveFile $child */
                 $output->writeln(
                     ' - A '.($child->getMimeType() === GoogleAPIClient::MIME_TYPE_DRIVE_FOLDER ? 'folder' : 'file')
-                    .'. Name: '.$child->getName()
+                    .'. Name: '.$child->getName(),
+                    OutputInterface::VERBOSITY_NORMAL
                 );
             }
 
@@ -274,8 +275,8 @@ class PingDriveCommand extends AbstractCommand
         \Google_Service_Sheets $service,
         \Google_Service_Drive_DriveFile $spreadsheet
     ) {
-        $output->writeln('<info>The URL is a Google Sheets file</info>');
-        $output->writeln('Name: '.$spreadsheet->getName());
+        $output->writeln('<info>The URL is a Google Sheets file</info>', OutputInterface::VERBOSITY_NORMAL);
+        $output->writeln('Name: '.$spreadsheet->getName(), OutputInterface::VERBOSITY_NORMAL);
 
         // Getting the list of sheets
         $spreadsheetData = $service->spreadsheets->get($spreadsheet->getId(), [
@@ -287,9 +288,9 @@ class PingDriveCommand extends AbstractCommand
             $sheetsNames[] = $sheet->getProperties()->getTitle();
         }
         if ($sheetsNames) {
-            $output->writeln('Sheets: '.implode(', ', $sheetsNames));
+            $output->writeln('Sheets: '.implode(', ', $sheetsNames), OutputInterface::VERBOSITY_NORMAL);
         } else {
-            $output->writeln('The file has no sheets');
+            $output->writeln('The file has no sheets', OutputInterface::VERBOSITY_NORMAL);
             return;
         }
 
@@ -298,7 +299,7 @@ class PingDriveCommand extends AbstractCommand
             'includeGridData' => true,
             'ranges' => ['A1:E5'] // Google returns only the data of the first sheet for this request
         ]);
-        $output->writeln('A piece of the first sheet content:');
+        $output->writeln('A piece of the first sheet content:', OutputInterface::VERBOSITY_NORMAL);
         $this->writeGoogleSheetTable($output, $spreadsheetData->getSheets()[0]);
     }
 
@@ -320,7 +321,7 @@ class PingDriveCommand extends AbstractCommand
             $output = $output->getErrorOutput();
         }
 
-        $output->writeln($this->getHelper('formatter')->formatBlock($message, 'error'));
+        $output->writeln($this->getHelper('formatter')->formatBlock($message, 'error'), OutputInterface::VERBOSITY_NORMAL);
     }
 
     /**
